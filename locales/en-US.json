@@ -184,6 +184,7 @@
     "ui.common.showDetails": "Show Details",
     "ui.common.default": "Default",
     "ui.common.info": "Info",
+    "ui.common.sync": "Sync",
 
     "ui.common.enable": "Enable",
     "ui.common.disable": "Disable",

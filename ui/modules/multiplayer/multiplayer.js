@@ -514,7 +514,29 @@ function formatBytes(bytes = 0, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-var styleMap = {
+var serverStyleMap = {
+    '^0': 'color:#000000',
+    '^1': 'color:#0000AA',
+    '^2': 'color:#00AA00',
+    '^3': 'color:#00AAAA',
+    '^4': 'color:#AA0000',
+    '^5': 'color:#AA00AA',
+    '^6': 'color:#FFAA00',
+    '^7': 'color:#AAAAAA',
+    '^8': 'color:#555555',
+    '^9': 'color:#5555FF',
+    '^a': 'color:#55FF55',
+    '^b': 'color:#55FFFF',
+    '^c': 'color:#FF5555',
+    '^d': 'color:#FF55FF',
+    '^e': 'color:#FFFF55',
+    '^f': 'color:#FFFFFF',
+    '^l': 'font-weight:bold',
+    '^m': 'text-decoration:line-through',
+    '^n': 'text-decoration:underline',
+    '^o': 'font-style:italic'
+};
+var descStyleMap = {
     '^0': 'color:#000000',
     '^1': 'color:#0000AA',
     '^2': 'color:#00AA00',
@@ -535,12 +557,59 @@ var styleMap = {
     '^m': 'text-decoration:line-through',
     '^n': 'text-decoration:underline',
     '^o': 'font-style:italic',
+    '^p': 'display:block'
 };
+function applyDescCode(string, codes) {
+    var elem = document.createElement('span');
+    string = string.replace(/\x00*/g, '');
+    for(var i = 0, len = codes.length; i < len; i++) {
+        elem.style.cssText += descStyleMap[codes[i]] + ';';
+    }
+    elem.innerHTML = string;
+    return elem;
+}
+function formatDescriptionName(string) {
+    var codes = string.match(/\^.{1}/g) || [],
+        indexes = [],
+        apply = [],
+        tmpStr,
+        deltaIndex,
+        noCode,
+        final = document.createDocumentFragment(),
+        i;
+    for(i = 0, len = codes.length; i < len; i++) {
+        indexes.push( string.indexOf(codes[i]) );
+        string = string.replace(codes[i], '\x00\x00');
+    }
+    if(indexes[0] !== 0) {
+        final.appendChild( applyDescCode( string.substring(0, indexes[0]), [] ) );
+    }
+    for(i = 0; i < len; i++) {
+    	indexDelta = indexes[i + 1] - indexes[i];
+        if(indexDelta === 2) {
+            while(indexDelta === 2) {
+                apply.push ( codes[i] );
+                i++;
+                indexDelta = indexes[i + 1] - indexes[i];
+            }
+            apply.push ( codes[i] );
+        } else {
+            apply.push( codes[i] );
+        }
+        if( apply.lastIndexOf('^r') > -1) {
+            apply = apply.slice( apply.lastIndexOf('^r') + 1 );
+        }
+        tmpStr = string.substring( indexes[i], indexes[i + 1] );
+        final.appendChild( applyDescCode(tmpStr, apply) );
+    }
+		$('#TEMPAREA').html(final);
+    return $('#TEMPAREA').html();;
+}
 function applyCode(string, codes) {
     var elem = document.createElement('span');
     string = string.replace(/\x00*/g, '');
     for(var i = 0, len = codes.length; i < len; i++) {
-        elem.style.cssText += styleMap[codes[i]] + ';';
+        elem.style.cssText += serverStyleMap[codes[i]] + ';';
     }
     elem.innerHTML = string;
     return elem;
@@ -620,7 +689,8 @@ function returnDefault(data, type) {
 	else return data;
 }
 function listPlayers(s) {
-	if (s != undefined) {
+	console.log(s)
+	if (s != undefined || s =="") {
 		var re = new RegExp(";", 'g');
 		s = s.replace(re, ', ');
 		s = s.substring(0, s.length -2);
@@ -637,14 +707,14 @@ function format ( d ) {
 		<tr id="ServerInfoRow">
 			<td colspan="5">
 				<h1 style="padding-left:10px;">`+officialMark(d.official, true)+formatServerName(d.sname)+`</h1>
-	      <div class="row">
+					<div class="row">
 					<div class="col">
-						<ul class="serverItemDetails">
-							<li>Description: ${d.sdesc}</li>
-							<li>Players: ${d.players}/${d.maxplayers}</li>
-							<li>Owner: ${d.owner}</li>
-								<li>Map: ${SmoothMapName(d.map)}</li>
-						</ul>
+						<table class="description-table">
+							<tr><td>Owner:</td><td>${d.owner}</td></tr>
+							<tr><td>Map:</td><td>${SmoothMapName(d.map)}</td></tr>
+							<tr><td>Players:</td><td>${d.players}/${d.maxplayers}</td></tr>
+							<tr><td valign="top">Description:</td><td>${formatDescriptionName(d.sdesc)}</td></tr>
+						</table>
 					</div>
 					<div class="col">
 						<ul class="serverItemDetails">

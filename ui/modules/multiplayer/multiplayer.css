@@ -77,6 +77,14 @@ table#serversTable {
 	background-color:#555555;
 }
 
+.description-table {
+	border-spacing: 22px 2px;
+}
+
+.description-table td{
+	border-right: 0px;
+}
+
 .highlight {
 	background-color: #99AAB5 !important;
 }
