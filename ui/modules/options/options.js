@@ -1,3 +1,4 @@
+var languageScope;
 angular.module('beamng.stuff')
 
 .value('Settings', {
@@ -110,6 +111,7 @@ function($scope, bngApi, SettingsAuxData, UiUnitsOptions, $state, $timeout, Rate
   vm.applyLanguage = function () {
     // unload current page, save language, then reload current page
     // this forces re-reading of all one-time data-bindings, to reflect the new language without having to use slow two-time data-bindings
+	vm.data.values.userLanguageMP = vm.data.values.userLanguage;
     var currentState = $state.current.name;
     $state.go('menu');
     bngApi.engineLua(`settings.setState(${bngApi.serializeToLua(vm.data.values)})`,
@@ -118,6 +120,23 @@ function($scope, bngApi, SettingsAuxData, UiUnitsOptions, $state, $timeout, Rate
       }, 500 ); }
     );
   };
+
+  function setLang(lang) {
+    // unload current page, save language, then reload current page
+    // this forces re-reading of all one-time data-bindings, to reflect the new language without having to use slow two-time data-bindings
+    var currentState = $state.current.name;
+    $state.go('menu');
+	console.log("trying to set language to " + lang);
+	vm.data.values.userLanguage = lang;
+	//console.log(vm.data.values);
+    bngApi.engineLua(`settings.setState(${bngApi.serializeToLua(vm.data.values)})`,
+      function (ret) { $timeout( function(){
+        $state.go(currentState);
+      }, 500 ); }
+    );
+  }
+
+
 
   function applyState (stateObj) {
     var onlineFeatures = 'disable';
@@ -205,6 +224,7 @@ function($scope, bngApi, SettingsAuxData, UiUnitsOptions, $state, $timeout, Rate
     uiUnitsOptions.system = system;
   };
 
+  languageScope = setLang;
 
 }])
 
@@ -1998,3 +2018,8 @@ function ($scope, bngApi, controlsContents, ControlsUtils) {
     {action: 'accelerate_brake', parts: ['accelerate', 'brake']}
   ]
 })
+
+
+function setLanguage(lang){
+	languageScope(lang);
+}

@@ -300,7 +300,8 @@ angular.module('beamng.stuff')
   vm.showData = (title, performance) => (vm.selectedConfig[title] !== undefined ? Vehicles.showData(title, true, performance) : false);
 
   vm.launchConfig = function (spawnNew) {
-    vm.mode.selected(vm.selectedConfig, vm.model.key, vm.selectedConfig.key, vm.selectedColor, spawnNew);
+	if(!spawnNew) bngApi.engineLua('core_vehicles.removeCurrent();');
+	vm.mode.selected(vm.selectedConfig, vm.model.key, vm.selectedConfig.key, vm.selectedColor, true);
   };
 
   // because of bug in non compete iirc

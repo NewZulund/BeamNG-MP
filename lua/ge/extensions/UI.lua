@@ -9,6 +9,15 @@ local players = {}
 
 print("UI Initialising...")
 
+
+--language setting
+local lang = settings.getValue("userLanguageMP")
+if lang ~= "" and lang ~= settings.getValue("userLanguage") then
+  print('setting language to: ' .. lang)
+  be:executeJS('setLanguage(\''..lang..'\');')
+end
+
+
 local function updateLoading(data)
   --print(data)
   local code = string.sub(data, 1, 1)
@@ -52,11 +61,13 @@ local function updatePlayersList(playersString)
 end
 
 local function setPing(ping)
+  if tonumber(ping) > -1 then
 	be:executeJS('setPing("'..ping..' ms")')
+  end
 end
 
 local function setNickName(name)
-  print("My NickName: "..name)
+  print("My Nickname: "..name)
 	be:executeJS('setNickname("'..name..'")')
 end
 

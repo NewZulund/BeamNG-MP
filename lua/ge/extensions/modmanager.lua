@@ -37,8 +37,9 @@ local autoMount = true
 local function updateTranslations ()
   local files = FS:findFiles('/locales/', '*.json', -1, true, false)
   local lang = {}
-
+  dump(files)
   for _, v in pairs(files) do
+    --print(ffi.string(v))
     -- this counter could later be used to indcate how much of the specific language is translated
     local index = v:match('.*%/(.*)%.json')
     if lang[index] == nil then

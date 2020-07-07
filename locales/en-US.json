@@ -2865,5 +2865,27 @@
     "vehicle.fire.fuelTankRuptured": "Fuel tank ruptured",
     "vehicle.turbocharger.overheating": "Turbo is overheating",
     "vehicle.main.instability": "Instability detected in '{{vehicle}}'. Simulation paused preemptively",
-    "vehicle.core.spawnError":"This is often caused by broken mods or corrupt core files. Please check in Safe Mode [url=https://documentation.beamng.com/troubleshooting/safe_mode.html][Click here for Safe Mode instructions][/url]If persists, perform a Clean Installation [url=https://documentation.beamng.com/troubleshooting/clean_install.html][Click here Clean Install instructions][/url]"
+    "vehicle.core.spawnError":"This is often caused by broken mods or corrupt core files. Please check in Safe Mode [url=https://documentation.beamng.com/troubleshooting/safe_mode.html][Click here for Safe Mode instructions][/url]If persists, perform a Clean Installation [url=https://documentation.beamng.com/troubleshooting/clean_install.html][Click here Clean Install instructions][/url]",
+	
+	
+	
+	"ui.options.multiplayer.nameTagTitle": "Nametags",
+	"ui.options.multiplayer.others": "Others",
+
+	
+	"ui.multiplayer.multiplayer": "Multiplayer",
+	"ui.multiplayer.connecting": "Connecting",
+	"ui.multiplayer.loading": "Loading...",
+	"ui.multiplayer.servers": "Servers",
+	"ui.multiplayer.favorites": "Favorites",
+	"ui.multiplayer.direct_connect": "Direct connect",
+	"ui.multiplayer.refresh": "Refresh",
+	"ui.multiplayer.connect": "Connect",
+
+	"ui.multiplayer.location": "Location",
+	"ui.multiplayer.description": "Title",
+	"ui.multiplayer.map": "Map",
+	"ui.multiplayer.players": "Players"
+
+	
 }

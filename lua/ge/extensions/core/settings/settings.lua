@@ -281,6 +281,8 @@ local settingsList = {       -- { storage, default_value }
   showNameTags                             = { disk, true },
   showDebugOutput                          = { disk, false },
   launcherPort                             = { disk, 4444 },
+  userLanguageMP                           = { cloud  , '' }, -- empty = no user language set, using steam or OS language then
+
 }
 
 local defaultValues = { }
@@ -349,6 +351,9 @@ local function refreshLanguages()
   -- 0) ask c++ what language is active right now, so we can see if it changed later
   local oldLanguage = Lua:getSelectedLanguage()
 
+  log("I", "settings.language", "userLanguage: " .. ffi.string(values.userLanguage))
+  log("I", "settings.language", "LuauserLanguage: " .. ffi.string(Lua.userLanguage))
+
   -- no community translations > en-US only
   if values.communityTranslations ~= 'enable' then
     -- en-US only
@@ -376,7 +381,7 @@ local function refreshLanguages()
 
   for _, l in pairs(locales) do
     local key = string.match(l, 'locales/([^\\.]+).json')
-
+    log("I", "settings.language", "available language: " .. ffi.string(key))
     table.insert(options.userLanguagesAvailable, {key=key, name = languageMap.resolve(key)})
   end
   --print(' * languagesAvailable: ' .. dumps(options.userLanguagesAvailable))
@@ -396,7 +401,9 @@ local function refreshLanguages()
     languageChanged = true
     values.userLanguage = ''
   end
-  --print(' - languageChanged >> ' .. tostring(languageChanged) .. ' | "' .. tostring(Lua:getSelectedLanguage()) .. '" ~= ' .. tostring(oldLanguage))
+  print('  languageChanged >> ' .. tostring(languageChanged) .. ' | from "' .. tostring(oldLanguage) .. '" to "' .. tostring(Lua:getSelectedLanguage())..'"')
+  --log("I", "settings.language", "available languages: ")
+  --dump(options.userLanguagesAvailable)
 
   -- send the new state to the UI
   if languageChanged or M.newTranslationsAvailable then

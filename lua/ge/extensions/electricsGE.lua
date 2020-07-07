@@ -88,9 +88,9 @@ end
 
 
 M.tick 			 = tick
-M.handle     = handle
+M.handle		 = handle
 M.sendGear		 = sendGear
-M.applyGear	 	 = applyGear
+M.applyGear		 = applyGear
 M.sendElectrics  = sendElectrics
 M.applyElectrics = applyElectrics
 
