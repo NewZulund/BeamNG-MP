@@ -12,6 +12,9 @@ local function applyPartConfig(data)
 	partmgmt.setConfig(decodedData)
 end
 
+obj:queueGameEngineLua("electricsGE.setReady(\'"..obj:getID().."\')")
+
+
 M.applyPartConfig = applyPartConfig
 
 return M

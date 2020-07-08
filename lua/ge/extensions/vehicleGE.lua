@@ -184,7 +184,7 @@ local function onServerVehicleSpawned(playerRole, playerNickname, serverVehicleI
 	local currentVeh = be:getPlayerVehicle(0) -- Camera fix
 	local decodedData     = jsonDecode(data)
 	local playerServerID  = decodedData[1] -- Server ID of the player that sent the vehicle
-	local gameVehicleID   = decodedData[2] -- gameVehicleID of the player that sended the vehicle
+	local gameVehicleID   = decodedData[2] -- gameVehicleID of the player that sent the vehicle
 	--local serverVehicleID = decodedData[3] -- Server ID of the vehicle
 	local vehicleName     = decodedData[3] -- Vehicle name
 	local vehicleConfig   = jsonDecode(decodedData[4]) -- Vehicle config
@@ -228,7 +228,7 @@ local function onVehicleSpawned(gameVehicleID)
 			print("[BeamMP] First Session Vehicle Removed, Maybe now request the vehicles in the game?")
 			if commands.isFreeCamera(player) then commands.setGameCamera() end -- Fix camera
 			UI.ready("FIRSTVEH") -- Solve session setup without UI sending ready status
-			onMPSessionInit()
+			--onMPSessionInit() -- AAAAAA commented bc this doesnt exist anywhere else and is causing an error
 		else
 			veh:queueLuaCommand("extensions.addModulePath('lua/vehicle/extensions/BeamMP')") -- Load lua files
 			veh:queueLuaCommand("extensions.loadModulesInDirectory('lua/vehicle/extensions/BeamMP')")
@@ -428,6 +428,7 @@ local function onUpdate(dt)
 						ET = Events Team
 						SUPPORT = Support
 						MOD = Moderator
+						ADM = Admin
 						GDEV = BeamNG Staff
 						MDEV = MP Dev
 					]]
@@ -456,6 +457,10 @@ local function onUpdate(dt)
 						forecolor = ColorF(68/255, 109/255, 184/255, 255/255)
 						backcolor = ColorI(68, 109, 184, 127)
 						tag = " [Moderator]"
+					elseif nicknameMap[tostring(veh:getID())].role == "ADM" then
+						forecolor = ColorF(218/255, 0, 78/255, 255/255)
+						backcolor = ColorI(218, 0, 78, 127)
+						tag = " [Admin]"
 					elseif nicknameMap[tostring(veh:getID())].role == "GDEV" then
 						forecolor = ColorF(252/255, 107/255, 3/255, 255/255)
 						backcolor = ColorI(252, 107, 3, 127)

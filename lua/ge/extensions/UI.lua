@@ -67,7 +67,7 @@ local function setPing(ping)
 end
 
 local function setNickName(name)
-  print("My Nickname: "..name)
+  --print("My Nickname: "..name)
 	be:executeJS('setNickname("'..name..'")')
 end
 
@@ -79,14 +79,14 @@ local function setPlayerCount(playerCount)
 	be:executeJS('setPlayerCount("'..playerCount..'")')
 end
 
-local function error(message)
-	print("UI Error > "..message)
-	ui_message(''..message, 10, 0, 0)
+local function error(text)
+	print("UI Error > "..text)
+	ui_message(''..text, 10, 0, 0)
 end
 
-local function message(mess)
-	print("[Message] > "..mess)
-	ui_message(''..mess, 10, 0, 0)
+local function message(text)
+	print("[Message] > "..text)
+	ui_message(''..text, 10, 0, 0)
 end
 
 local function showNotification(type, text)
@@ -101,9 +101,12 @@ local function showNotification(type, text)
   end
 end
 
-local function chatMessage(rawMessage)
-  local message = string.sub(rawMessage, 2)
-	be:executeJS('addMessage("'..message..'")')
+local function chatMessage(rawMessage, sendWhole)
+  local message = rawMessage
+  if sendWhole == nil then
+	message = string.sub(rawMessage, 2)
+  end
+  be:executeJS('addMessage("'..message..'")')
 end
 
 local function chatSend(msg)

@@ -6,8 +6,14 @@
 
 
 local M = {}
+
+local readyMap = {}
+
 print("electricsGE Initialising...")
 
+local function isReady(gameVehicleID)
+    return readyMap[tostring(gameVehicleID)] ~= nil
+end
 
 
 local function tick() -- Update electrics values of all vehicles - The server check if the player own the vehicle itself
@@ -39,7 +45,7 @@ local function applyElectrics(data, serverVehicleID)
 	--print("gameVehicleID: "..vehicleGE.getGameVehicleID(serverVehicleID))
 	local gameVehicleID = vehicleGE.getGameVehicleID(serverVehicleID) or -1 -- get gameID
 	local veh = be:getObjectByID(gameVehicleID)
-	if veh then
+	if veh and isReady(gameVehicleID) then
 		if not vehicleGE.isOwn() then
 			veh:queueLuaCommand("electricsVE.applyElectrics(\'"..data.."\')")
 		end
@@ -61,7 +67,7 @@ end
 local function applyGear(data, serverVehicleID)
 	local gameVehicleID = vehicleGE.getGameVehicleID(serverVehicleID) or -1 -- get gameID
 	local veh = be:getObjectByID(gameVehicleID)
-	if veh then
+	if veh and isReady(gameVehicleID) then
 		if not vehicleGE.isOwn() then
 			veh:queueLuaCommand("electricsVE.applyGear(\'"..data.."\')")
 		end
@@ -85,10 +91,15 @@ local function handle(rawData)
 	end
 end
 
+local function setReady(gameVehicleID)
+	readyMap[tostring(gameVehicleID)] = 1 -- Insert vehicle in ready map
+end
 
 
 M.tick 			 = tick
 M.handle		 = handle
+M.isReady		 = isReady
+M.setReady		 = setReady
 M.sendGear		 = sendGear
 M.applyGear		 = applyGear
 M.sendElectrics  = sendElectrics

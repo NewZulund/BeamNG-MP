@@ -58,7 +58,7 @@ local function applyPos(data, serverVehicleID)
 		--GameNetwork.send('On:'..serverVehicleID)
 	--end
 	local veh = be:getObjectByID(gameVehicleID)
-	if veh then
+	if veh and electricsGE.isReady(gameVehicleID) then
 		--print(data)
 		local pr = jsonDecode(data) -- Decoded data
 		--print(dump(pr))

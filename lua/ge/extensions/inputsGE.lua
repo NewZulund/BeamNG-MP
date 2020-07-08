@@ -34,7 +34,7 @@ end
 local function applyInputs(data, serverVehicleID)
 	local gameVehicleID = vehicleGE.getGameVehicleID(serverVehicleID) or -1 -- get gameID
 	local veh = be:getObjectByID(gameVehicleID)
-	if veh then
+	if veh and electricsGE.isReady(gameVehicleID) then
 		veh:queueLuaCommand("inputsVE.applyInputs(\'"..data.."\')")
 	end
 end
