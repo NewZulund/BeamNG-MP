@@ -61,11 +61,12 @@ local function cancelConnection()
 	TCPSocket:send('QS')
 end
 
-local function setServer(id, ip, port, mods)
+local function setServer(id, ip, port, mods, name)
 	Server.IP = ip;
 	Server.PORT = port;
 	Server.ID = id;
 	Server.MODSTRING = mods
+	Server.NAME = name
 	local mods = {}
 	for str in string.gmatch(Server.MODSTRING, "([^;]+)") do
 		table.insert(mods, str)
@@ -130,7 +131,7 @@ local function LoadLevel(map)
 			print(v.levelName)
 	    if v.levelName:lower() == levelName then
 				print("Loading Multiplayer Map...")
-				freeroam_freeroam.startFreeroamByName(v.levelName)
+				freeroam_freeroam.startFreeroamByName(v.levelName, "default", true)
 				found = true
 				mapLoadingFailedCount = 0
 				break;
@@ -256,6 +257,7 @@ local function modLoaded(modname)
 	end
 end
 
+M.Server = Server
 M.onUpdate = onUpdate
 M.getServers = getServers
 M.setServer = setServer

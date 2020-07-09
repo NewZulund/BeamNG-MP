@@ -25,12 +25,13 @@ app.controller("Session", ['$scope', 'bngApi', function ($scope, bngApi) {
 	};
 }]);
 
+
 function setPing(ping) {
 	document.getElementById("Session-Ping").innerHTML = ping;
 }
 
 function setStatus(status) {
-	document.getElementById("Session-Status").innerHTML = status;
+	document.getElementById("Session-Status").innerHTML = stripCustomFormatting(status);
 }
 
 function setPlayerCount(count) {

@@ -10,11 +10,13 @@ local players = {}
 print("UI Initialising...")
 
 
---language setting
-local lang = settings.getValue("userLanguageMP")
-if lang ~= "" and lang ~= settings.getValue("userLanguage") then
-  print('setting language to: ' .. lang)
-  be:executeJS('setLanguage(\''..lang..'\');')
+-- setLanguage() -- language setting in case its not in the base game list
+local function setLanguage()
+  local lang = settings.getValue("userLanguageMP")
+  if lang ~= "" and lang ~= settings.getValue("userLanguage") then
+	print('setting language to: ' .. lang)
+	be:executeJS('setLanguage(\''..lang..'\');')
+  end
 end
 
 
@@ -72,7 +74,7 @@ local function setNickName(name)
 end
 
 local function setStatus(status)
-	be:executeJS('setStatus("'..status..' ms")')
+	be:executeJS('setStatus("'..status..'")')
 end
 
 local function setPlayerCount(playerCount)
@@ -121,10 +123,14 @@ local function ready(src)
   print("UI / Game Has now loaded ("..src..")")
   -- Now start the TCP connection to the launcher to allow the sending and receiving of the vehicle / session data
   if src == "MP-SESSION" or src == "FIRSTVEH" then
-    if ready then
-      ready = false
-      GameNetwork.connectToLauncher()
-    end
+	if ready then
+	  ready = false
+	  GameNetwork.connectToLauncher()
+	  
+	  if CoreNetwork.Server.NAME ~= nil then
+		setStatus("Server: "..CoreNetwork.Server.NAME)
+	  end
+	end
   end
 end
 

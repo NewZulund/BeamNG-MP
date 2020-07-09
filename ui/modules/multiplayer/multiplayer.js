@@ -1,4 +1,4 @@
-var serversScope, selectRowScope, connectScope;
+var serversScope, selectRowScope, connectScope, bngApiScope;
 angular.module('beamng.stuff')
 
 /**
@@ -61,7 +61,8 @@ angular.module('beamng.stuff')
 
 	$scope.$on('LoadingInfo', function (event, data) {
 		console.log(data.message)
-		document.getElementById('LoadingStatus').innerText = data.message;
+		if (data.message == "done") document.getElementById('LoadingStatus').innerText = "Done";
+		else document.getElementById('LoadingStatus').innerText = data.message;
 	});
 
 	vm.exit = function ($event) {
@@ -83,6 +84,7 @@ angular.module('beamng.stuff')
 }])
 .controller('MultiplayerServersController', ['logger', '$scope', '$state', '$timeout', 'bngApi', function(logger, $scope, $state, $timeout, bngApi) {
 	var vm = this;
+	bngApiScope = bngApi;
 	bngApi.engineLua('CoreNetwork.getServers()');
 	vm.exit = function ($event) {
 		if ($event)
@@ -121,7 +123,7 @@ angular.module('beamng.stuff')
 			if (servers[i].hasOwnProperty(id)) {
 				//console.log(servers[i][id])
 				var server = servers[i][id];
-				bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}")`);
+				bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
 			}
 		}
 	}
@@ -213,7 +215,7 @@ angular.module('beamng.stuff')
 	};
 
 	function receiveServers(data) {
-		console.log(data)
+		//console.log(data)
 		localStorage.setItem('servers', JSON.stringify(data))
 		var table = document.getElementById("serversTableBody");
 		table.innerHTML = "";
@@ -298,7 +300,7 @@ angular.module('beamng.stuff')
 			if (servers[i].hasOwnProperty(id)) {
 				//console.log(servers[i][id])
 				var server = servers[i][id];
-				bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}")`);
+				bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
 			}
 		}
 	}
@@ -742,14 +744,14 @@ window.onload = function() {
 	if (window.jQuery) {
 		// jQuery is loaded
 		//alert("Yeah!");
-		console.log("DT Setup?")
+		//console.log("DT Setup?")
 		var table = $('#serversTable').DataTable({
 			responsive: true,
 			"columns": [
 				{
-					"className":      'details-control',
-					"orderable":      true,
-					"data":           null,
+					"className": 'details-control',
+					"orderable": true,
+					"data": null,
 					"defaultContent": ''
 				},
 				{ "data": "location" },
@@ -762,16 +764,16 @@ window.onload = function() {
 		});
 
 		// Add event listener for opening and closing details
-    $(document).on('click', '#serversTableBody > tr', function(e) {
+		$(document).on('click', '#serversTableBody > tr', function(e) {
 			$("#ServerInfoRow").remove();
-      var tr = e;//$(this).closest('tr');
-      var row = table.row( tr );
-      if ( row.child.isShown() ) {
-        // This row is already open - close it
-        row.child.hide();
-        tr.removeClass('shown');
-      } else {
-        // Open this row
+			var tr = e;//$(this).closest('tr');
+			var row = table.row( tr );
+			if ( row.child.isShown() ) {
+				// This row is already open - close it
+				row.child.hide();
+				tr.removeClass('shown');
+			} else {
+			// Open this row
 				var id = $(e.currentTarget).attr("data-id")
 				console.log(id)
 				var servers = JSON.parse(localStorage.getItem('servers'))
@@ -781,18 +783,18 @@ window.onload = function() {
 						var server = servers[i][id];
 						//$(e.currentTarget).append( format(server) ).show();
 						$(format(server)).insertAfter($(e.currentTarget)).show();
-	           $(e.currentTarget).addClass('shown');
+						$(e.currentTarget).addClass('shown');
 					}
 				}
-      }
-  	});
-
+			}
+		});
+	
 		$(document).on('click', '#addFav-button', function(e) {
 			console.log(e)
 		});
-
+	
 		// Add event listener for opening and closing details
-    $(document).on('click', '#serverconnect-button', function(e) {
+		$(document).on('click', '#serverconnect-button', function(e) {
 			connectScope();
 		});
 	} else {
@@ -804,3 +806,60 @@ window.onload = function() {
 $(document).on('click', '#serversTableBody > tr', function(e) {
 	selectRowScope(e.originalEvent)
 });
+
+
+var serverStyleArray = [
+    "^0",
+    "^1",
+    "^2",
+    "^3",
+    "^4",
+    "^5",
+    "^6",
+    "^7",
+    "^8",
+    "^9",
+    "^a",
+    "^b",
+    "^c",
+    "^d",
+    "^e",
+    "^f",
+    "^l",
+    "^m",
+    "^n",
+    "^o",
+    "^p"
+];
+function stripCustomFormatting(name) { // this is used for the Session UI app as well
+	for (var i = 0; i < serverStyleArray.length; i++){
+		while (name.includes(serverStyleArray[i])){
+			name = name.replace(serverStyleArray[i], "");
+		}
+	}
+	return name;
+}
+
+
+function findPlayer(pname, join=false){
+	pname = pname.toLowerCase();
+	var servers = JSON.parse(localStorage.getItem('servers'))
+	for (var id = 0; id < servers.length; id++) {
+		if (servers[id].hasOwnProperty(id)) {
+			var server = servers[id][id];
+			if (server.playerslist !== undefined){
+				if (server.playerslist.toLowerCase().includes(pname)){
+					var names = server.playerslist.split(';').filter(function (item) { return item.toLowerCase().includes(pname); });
+					console.log("found player '" +names[0]+ "'\n on server ID:" +id+ "\n Title: " +stripCustomFormatting(server.sname));
+					if(join){
+						bngApiScope.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
+						bngApiScope.engineLua('CoreNetwork.connectToServer()');
+					}
+					return id;
+				}
+			}
+		}
+	}
+	console.log("player "+ pname+" not found.");
+	return -1;
+}
