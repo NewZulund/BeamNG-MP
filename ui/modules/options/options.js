@@ -2019,6 +2019,10 @@ function ($scope, bngApi, controlsContents, ControlsUtils) {
   ]
 })
 
+function collisionVisible(visible){
+	if (visible) document.getElementById('collisionsContainer').style.display = 'block'
+	else document.getElementById('collisionsContainer').style.display = 'none'
+}
 
 function setLanguage(lang){
 	languageScope(lang);

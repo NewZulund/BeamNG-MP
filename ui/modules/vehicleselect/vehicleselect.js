@@ -623,7 +623,11 @@ function (logger, $scope, $state, $timeout, $stateParams, $rootScope, bngApi, In
 
   };
   vm.removeCurrentVehicle = function() {
-    bngApi.engineLua('core_vehicles.removeCurrent(); extensions.hook("trackNewVeh")');
+	//bngApi.engineLua("vehicleGE.removeRequest('\"..obj:getID()..\"'\)");
+
+	if (true) bngApi.activeObjectLua("obj:queueGameEngineLua(\"vehicleGE.removeRequest('\"..obj:getID()..\"')\")");
+	else bngApi.engineLua('core_vehicles.removeCurrent(); extensions.hook("trackNewVeh")');
+
     $state.go('menu');
     $rootScope.$broadcast('MenuHide');
   };

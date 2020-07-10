@@ -13,7 +13,7 @@ angular.module('beamng.stuff')
 **/
 .controller('MultiplayerController', ['logger', '$scope', '$state', '$timeout', 'bngApi', function(logger, $scope, $state, $timeout, bngApi) {
 	var vm = this;
-
+	bngApiScope = bngApi;
 	// --------- CUSTOM CODE --------- //
 
 	$scope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
@@ -60,7 +60,7 @@ angular.module('beamng.stuff')
 	//bngApi.engineLua('core_gamestate.requestGameState();');   // if this isnt called the gamestate in menu doesnt update correctly.
 
 	$scope.$on('LoadingInfo', function (event, data) {
-		console.log(data.message)
+		if (document.getElementById('LoadingStatus').innerText != data.message) console.log(data.message)
 		if (data.message == "done") document.getElementById('LoadingStatus').innerText = "Done";
 		else document.getElementById('LoadingStatus').innerText = data.message;
 	});
@@ -262,6 +262,7 @@ angular.module('beamng.stuff')
 }])
 .controller('MultiplayerFavoritesController', ['logger', '$scope', '$state', '$timeout', 'bngApi', function(logger, $scope, $state, $timeout, bngApi) {
 	var vm = this;
+	bngApiScope = bngApi;
 	//bngApi.engineLua('CoreNetwork.getServers()');
 	vm.exit = function ($event) {
 		if ($event)
@@ -441,6 +442,7 @@ angular.module('beamng.stuff')
 .controller('MultiplayerSettingsController', ['logger', '$scope', '$state', '$timeout', 'bngApi',
 function(logger, $scope, $state, $timeout, bngApi) {
 	var vm = this;
+	bngApiScope = bngApi;
 
 	vm.exit = function ($event) {
 		if ($event)
@@ -463,6 +465,7 @@ function(logger, $scope, $state, $timeout, bngApi) {
 .controller('MultiplayerDirectController', ['logger', '$scope', '$state', '$timeout', 'bngApi',
 function(logger, $scope, $state, $timeout, bngApi) {
 	var vm = this;
+	bngApiScope = bngApi;
 
 	vm.exit = function ($event) {
 		if ($event)
@@ -853,6 +856,7 @@ function findPlayer(pname, join=false){
 					console.log("found player '" +names[0]+ "'\n on server ID:" +id+ "\n Title: " +stripCustomFormatting(server.sname));
 					if(join){
 						bngApiScope.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
+						if (document.getElementById('LoadingServer') !== null) document.getElementById('LoadingServer').style.display = 'block'
 						bngApiScope.engineLua('CoreNetwork.connectToServer()');
 					}
 					return id;

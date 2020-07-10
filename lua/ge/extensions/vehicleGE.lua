@@ -149,8 +149,11 @@ local function sendCustomVehicleData(gameVehicleID, vehicleConfig)
 
 	local stringToSend = jsonEncode(vehicleTable) -- Encode table to send it as json string
 	GameNetwork.send('Oc:'..getServerVehicleID(gameVehicleID)..':'..stringToSend)--Network.buildPacket(1, 2020, 0, stringToSend))	-- Send table that contain all vehicle informations for each vehicle
+
+	syncTimer = 0
+	syncVehIDs[gameVehicleID] = nil
 end
---=========================================== SEND MODIFIED VEHICLE DATA =============================================
+--=========================================== RECEIVE MODIFIED VEHICLE DATA =============================================
 
 local function UpdateVehicle(sid, data)
 	local gameVehicleID = getGameVehicleID(sid)
@@ -214,7 +217,8 @@ local function onServerVehicleSpawned(playerRole, playerNickname, serverVehicleI
 end
 --================================= ON VEHICLE SPAWNED (SERVER) ===================================
 
-
+local syncTimer = 0
+local syncVehIDs = {}
 
 --================================= ON VEHICLE SPAWNED (CLIENT) ===================================
 local function onVehicleSpawned(gameVehicleID)
@@ -242,6 +246,8 @@ local function onVehicleSpawned(gameVehicleID)
 		end
 	else
 		print("[BeamMP] Vehicle Edited: "..gameVehicleID)
+		syncTimer=0
+		syncVehIDs[gameVehicleID] = 1
 	end
 end
 --================================= ON VEHICLE SPAWNED (CLIENT) ===================================
@@ -409,13 +415,24 @@ local function handle(rawData)
 	end
 end
 
+local function removeRequest(gameVehicleID)
+	if isOwn(gameVehicleID) then
+		core_vehicles.removeCurrent(); extensions.hook("trackNewVeh")
+		print("[BeamMP] request to remove car id "..gameVehicleID.." DONE")
+	else
+		print("[BeamMP] request to remove car id "..gameVehicleID.." DENIED")
+	end
+end
+
 local function onUpdate(dt)
 	if GameNetwork.connectionStatus() == 1 then -- If TCP connected
 		if be:getObjectCount() == 0 then return end -- If no vehicle do nothing
+		local shouldSync = false
 		for i = 0, be:getObjectCount() do -- For each vehicle
 			local veh = be:getObject(i) --  Get vehicle
 			if veh then -- For loop always return one empty vehicle ?
-				if not isOwn(veh:getID()) and nicknameMap[tostring(veh:getID())] ~= nil and settings.getValue("showNameTags") == true then
+				local gameVehicleID = veh:getID()
+				if not isOwn(gameVehicleID) and nicknameMap[tostring(gameVehicleID)] ~= nil and settings.getValue("showNameTags") == true then
 					local pos = veh:getPosition()
 					pos.z = pos.z + 2.0
 					local forecolor = ColorF(1,1,1,1)
@@ -433,39 +450,39 @@ local function onUpdate(dt)
 						MDEV = MP Dev
 					]]
 					--print(dump(nicknameMap[tostring(veh:getID())]))
-					if nicknameMap[tostring(veh:getID())].role == "USER" then
+					if nicknameMap[tostring(gameVehicleID)].role == "USER" then
 						forecolor = ColorF(1, 1, 1, 1)
 						backcolor = ColorI(0, 0, 0, 127)
 						tag = ""
-					elseif nicknameMap[tostring(veh:getID())].role == "EA" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "EA" then
 						forecolor = ColorF(155/255, 89/255, 182/255, 255/255)
 						backcolor = ColorI(69, 0, 150, 127)
 						tag = " [Early Access]"
-					elseif nicknameMap[tostring(veh:getID())].role == "YT" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "YT" then
 						forecolor = ColorF(255/255, 0, 0, 255/255)
 						backcolor = ColorI(200, 0, 0, 127)
 						tag = " [YouTuber]"
-					elseif nicknameMap[tostring(veh:getID())].role == "ET" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "ET" then
 						forecolor = ColorF(210/255, 214/255, 109/255, 255/255)
 						backcolor = ColorI(210, 214, 109, 127)
 						tag = " [Events Team]"
-					elseif nicknameMap[tostring(veh:getID())].role == "SUPPORT" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "SUPPORT" then
 						forecolor = ColorF(68/255, 109/255, 184/255, 255/255)
 						backcolor = ColorI(68, 109, 184, 127)
 						tag = " [Support]"
-					elseif nicknameMap[tostring(veh:getID())].role == "MOD" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "MOD" then
 						forecolor = ColorF(68/255, 109/255, 184/255, 255/255)
 						backcolor = ColorI(68, 109, 184, 127)
 						tag = " [Moderator]"
-					elseif nicknameMap[tostring(veh:getID())].role == "ADM" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "ADM" then
 						forecolor = ColorF(218/255, 0, 78/255, 255/255)
 						backcolor = ColorI(218, 0, 78, 127)
 						tag = " [Admin]"
-					elseif nicknameMap[tostring(veh:getID())].role == "GDEV" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "GDEV" then
 						forecolor = ColorF(252/255, 107/255, 3/255, 255/255)
 						backcolor = ColorI(252, 107, 3, 127)
 						tag = " [BeamNG Staff]"
-					elseif nicknameMap[tostring(veh:getID())].role == "MDEV" then
+					elseif nicknameMap[tostring(gameVehicleID)].role == "MDEV" then
 						forecolor = ColorF(194/255, 55/255, 55/255, 255/255)
 						backcolor = ColorI(194, 55, 55, 127)
 						tag = " [MP DEV]"
@@ -491,13 +508,27 @@ local function onUpdate(dt)
 						backcolor -- Background Color
 					)
 				end
+
+
+				if syncVehIDs[gameVehicleID] ~= nil then
+					syncTimer = syncTimer+dt
+					if syncTimer > 10 then
+						shouldSync = true
+						syncTimer = 0
+					end
+					if shouldSync then
+						print("[BeamMP] Autosyncing car ID "..gameVehicleID)
+						veh:queueLuaCommand("obj:queueGameEngineLua(\"vehicleGE.sendCustomVehicleData("..gameVehicleID..", '\"..jsonEncode(partmgmt.state.config)..\"')\")")
+						syncVehIDs[gameVehicleID] = nil
+					end
+				end
 			end
 		end
 	end
 end
 
 
-
+M.removeRequest			  = removeRequest
 M.onUpdate                = onUpdate
 M.handle                  = handle
 M.onVehicleSwitched       = onVehicleSwitched

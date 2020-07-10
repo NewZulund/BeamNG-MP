@@ -261,6 +261,7 @@ angular.module('beamng.stuff')
 .controller('MenuController', ['$scope', 'bngApi', 'Utils', '$state', function ($scope, bngApi, Utils, $state) {
   'use strict';
   var vm = this;
+  bngApiScope = bngApi;
 
   vm.showView = false;
 

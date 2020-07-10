@@ -14,6 +14,7 @@ local maxBuffer = 0.4          -- How many seconds packets will be kept in buffe
 local posCorrectMul = 2        -- How much acceleration to use for correcting position error
 local maxPosError = 1          -- If position error is larger than this, teleport the vehicle
 local rotCorrectMul = 2        -- How much acceleration to use for correcting angle error
+local bufferTimeout = 5        -- How long the last position update should be applied for
 
 local timer = 0
 local buffer = dequeue.new()
@@ -31,6 +32,12 @@ local function updateGFX(dt)
 
 	-- If there is no data in the buffer, skip everything
 	if not data then return end
+
+	if data.localTime > bufferTimeout then
+		buffer:pop_right()
+		return
+	end
+
 
 	-- Average remote to local time difference over buffer
 	local avgTimeDiff = 0
@@ -129,6 +136,7 @@ local function setVehiclePosRot(pos, vel, rot, rvel, tim)
 	}
 
 	buffer:push_right(data)
+	bufferTimeout = 0
 end
 
 
