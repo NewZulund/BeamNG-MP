@@ -15,14 +15,12 @@ local posCorrectMul = 2        -- How much acceleration to use for correcting po
 local maxPosError = 1          -- If position error is larger than this, teleport the vehicle
 local rotCorrectMul = 2        -- How much acceleration to use for correcting angle error
 
-local bufferTimer = 0
 local timer = 0
 local buffer = dequeue.new()
 -- ============= VARIABLES =============
 
 local function updateGFX(dt)
 	timer = timer + dt
-	bufferTimer = bufferTimer + dt
 
 	-- Remove packets older than bufferTime from buffer, but keep at least 1
 	while buffer:length() > 1 and timer-buffer:peek_left().localTime > maxBuffer do
@@ -33,16 +31,6 @@ local function updateGFX(dt)
 
 	-- If there is no data in the buffer, skip everything
 	if not data then return end
-
-	if bufferTimer > 20 then
-		log("W", "posVE", "no update for 20s for veh "..obj:getID)
-		obj:queueGameEngineLua("be:getObjectByID("..obj:getID().."):delete()")
-
-	--elseif bufferTimer > 2 then
-		--log("W", "posVE", "pos data is too old for veh "..obj:getID()..", t:"..bufferTimer)		
-		--return
-	end
-
 
 	-- Average remote to local time difference over buffer
 	local avgTimeDiff = 0
@@ -88,6 +76,7 @@ local function updateGFX(dt)
 
 	velocityVE.setVelocity(vel.x, vel.y, vel.z)
 	velocityVE.setAngularVelocity(rvel.y, rvel.z, rvel.x)
+	--velocityVE.setAngularVelocity(rvel.x, rvel.y, rvel.z)
 end
 
 local function getVehicleRotation()
@@ -140,7 +129,6 @@ local function setVehiclePosRot(pos, vel, rot, rvel, tim)
 	}
 
 	buffer:push_right(data)
-	bufferTimer = 0
 end
 
 

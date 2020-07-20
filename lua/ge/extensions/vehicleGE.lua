@@ -438,6 +438,7 @@ local function onUpdate(dt)
 					local forecolor = ColorF(1,1,1,1)
 					local backcolor = ColorI(0,0,0,127)
 					local tag = ""
+					local vehIDstr = tostring(gameVehicleID)
 					--[[
 						USER = Default
 						EA = Early Access
@@ -450,39 +451,39 @@ local function onUpdate(dt)
 						MDEV = MP Dev
 					]]
 					--print(dump(nicknameMap[tostring(veh:getID())]))
-					if nicknameMap[tostring(gameVehicleID)].role == "USER" then
+					if nicknameMap[vehIDstr].role == "USER" then
 						forecolor = ColorF(1, 1, 1, 1)
 						backcolor = ColorI(0, 0, 0, 127)
 						tag = ""
-					elseif nicknameMap[tostring(gameVehicleID)].role == "EA" then
+					elseif nicknameMap[vehIDstr].role == "EA" then
 						forecolor = ColorF(155/255, 89/255, 182/255, 255/255)
 						backcolor = ColorI(69, 0, 150, 127)
 						tag = " [Early Access]"
-					elseif nicknameMap[tostring(gameVehicleID)].role == "YT" then
+					elseif nicknameMap[vehIDstr].role == "YT" then
 						forecolor = ColorF(255/255, 0, 0, 255/255)
 						backcolor = ColorI(200, 0, 0, 127)
 						tag = " [YouTuber]"
-					elseif nicknameMap[tostring(gameVehicleID)].role == "ET" then
+					elseif nicknameMap[vehIDstr].role == "ET" then
 						forecolor = ColorF(210/255, 214/255, 109/255, 255/255)
 						backcolor = ColorI(210, 214, 109, 127)
 						tag = " [Events Team]"
-					elseif nicknameMap[tostring(gameVehicleID)].role == "SUPPORT" then
+					elseif nicknameMap[vehIDstr].role == "SUPPORT" then
 						forecolor = ColorF(68/255, 109/255, 184/255, 255/255)
 						backcolor = ColorI(68, 109, 184, 127)
 						tag = " [Support]"
-					elseif nicknameMap[tostring(gameVehicleID)].role == "MOD" then
+					elseif nicknameMap[vehIDstr].role == "MOD" then
 						forecolor = ColorF(68/255, 109/255, 184/255, 255/255)
 						backcolor = ColorI(68, 109, 184, 127)
 						tag = " [Moderator]"
-					elseif nicknameMap[tostring(gameVehicleID)].role == "ADM" then
+					elseif nicknameMap[vehIDstr].role == "ADM" then
 						forecolor = ColorF(218/255, 0, 78/255, 255/255)
 						backcolor = ColorI(200, 0, 65, 127)
 						tag = " [Admin]"
-					elseif nicknameMap[tostring(gameVehicleID)].role == "GDEV" then
+					elseif nicknameMap[vehIDstr].role == "GDEV" then
 						forecolor = ColorF(252/255, 107/255, 3/255, 255/255)
 						backcolor = ColorI(252, 107, 3, 127)
 						tag = " [BeamNG Staff]"
-					elseif nicknameMap[tostring(gameVehicleID)].role == "MDEV" then
+					elseif nicknameMap[vehIDstr].role == "MDEV" then
 						forecolor = ColorF(194/255, 55/255, 55/255, 255/255)
 						backcolor = ColorI(194, 55, 55, 127)
 						tag = " [MP DEV]"
@@ -503,7 +504,7 @@ local function onUpdate(dt)
 
 					debugDrawer:drawTextAdvanced(
 						pos, -- Position in 3D
-						String(" "..tostring(nicknameMap[tostring(veh:getID())].nickname)..tag.." "), -- Text
+						String(" "..tostring(nicknameMap[vehIDstr].nickname)..tag.." "), -- Text
 						forecolor, true, false, -- Foreground Color / Background / Wtf
 						backcolor -- Background Color
 					)
