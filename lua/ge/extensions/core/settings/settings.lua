@@ -280,8 +280,7 @@ local settingsList = {       -- { storage, default_value }
   -- Multiplayer Settings
   showNameTags                             = { disk, true },
   showDebugOutput                          = { disk, false },
-  launcherPort                             = { disk, 4444 },
-  userLanguageMP                           = { cloud  , '' }, -- empty = no user language set, using steam or OS language then
+  launcherPort                             = { disk, 4444 }
 
 }
 

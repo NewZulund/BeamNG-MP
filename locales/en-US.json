@@ -2872,7 +2872,7 @@
 	"ui.options.multiplayer.nameTagTitle": "Nametags",
 	"ui.options.multiplayer.others": "Others",
 
-	
+
 	"ui.multiplayer.multiplayer": "Multiplayer",
 	"ui.multiplayer.connecting": "Connecting",
 	"ui.multiplayer.loading": "Loading...",
@@ -2882,10 +2882,12 @@
 	"ui.multiplayer.refresh": "Refresh",
 	"ui.multiplayer.connect": "Connect",
 
+	"ui.multiplayer.addCustomServer": "Add Custom Server",
+
 	"ui.multiplayer.location": "Location",
 	"ui.multiplayer.description": "Title",
 	"ui.multiplayer.map": "Map",
 	"ui.multiplayer.players": "Players"
 
-	
+
 }

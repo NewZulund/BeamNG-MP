@@ -1,4 +1,5 @@
-var serversScope, selectRowScope, connectScope, bngApiScope;
+var serversScope, selectRowScope, connectScope, displayServerScope, bngApiScope;
+var highlightedServer;
 angular.module('beamng.stuff')
 
 /**
@@ -39,7 +40,7 @@ angular.module('beamng.stuff')
 
 	connectScope = vm.connect;
 
-	vm.refresh = function() {
+	vm.refreshList = function() {
 		logger.debug("Attempting to refresh server list.")
 		bngApi.engineLua('CoreNetwork.getServers()');
 	}
@@ -50,6 +51,29 @@ angular.module('beamng.stuff')
 		var port = document.getElementById('directport').value;
 		document.getElementById('LoadingServer').style.display = 'block';
 		bngApi.engineLua(`CoreNetwork.connectToServer("${ip}","${port}")`);
+	};
+
+	vm.closePopup =  function() {
+		document.getElementById('addCustomFav').style.display = 'none';
+		document.getElementById('LoadingServer').style.display = 'none';
+	};
+
+	vm.showCustomServer = function() {
+		document.getElementById('addCustomFav').style.display = 'block';
+	};
+
+	vm.addCustomServer = function() {
+
+		addToFav(document.getElementById('customFavName').value,
+					document.getElementById('customFavIP').value,
+					document.getElementById('customFavPort').value);
+
+
+
+		document.getElementById('addCustomFav').style.display = 'none';
+		document.getElementById('customFavName').value = '';
+		document.getElementById('customFavIP').value = '';
+		document.getElementById('customFavPort').value = '';
 	};
 
 	vm.stateName = $state.current.name;
@@ -116,193 +140,12 @@ angular.module('beamng.stuff')
 		row.selected = true;
 		table.selectedRow = row;
 		//console.log(row)
-		var id = row.getAttribute('data-id')
-		//console.log(id)
-		var servers = JSON.parse(localStorage.getItem('servers'))
-		for (var i = 0; i < servers.length; i++) {
-			if (servers[i].hasOwnProperty(id)) {
-				//console.log(servers[i][id])
-				var server = servers[i][id];
-				bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
-			}
-		}
-	}
-
-	function setColor(row) {
-		if (row.rowIndex % 2 == 0) { // If odd gray / If even lightgray
-			row.style.backgroundColor = "white";
-		} else {
-			row.style.backgroundColor = "#f2f2f2";
-		}
-	}
-
-	vm.sortTable = function(n, data, number) {
-		var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-		table = document.getElementById("servers-table");
-		switching = true;
-		// Set the sorting direction to ascending:
-		dir = "asc";
-		// Make a loop that will continue until no switching has been done:
-		while (switching) {
-			// Start by saying: no switching is done:
-			switching = false;
-			rows = table.rows;
-			// Loop through all table rows (except the first, which contains table headers):
-			for (i = 1; i < (rows.length - 1); i++) {
-				// Start by saying there should be no switching:
-				shouldSwitch = false;
-				// Get the two elements you want to compare, one from current row and one from the next:
-				x = rows[i].servData[data];
-				y = rows[i + 1].servData[data];
-				if (x.toLowerCase) {
-					x = x.toLowerCase()
-					y = y.toLowerCase()
-				}
-				// Check if the two rows should switch place, based on the direction, asc or desc:
-				if (dir == "asc") {
-					if (x > y) {
-						// If so, mark as a switch and break the loop:
-						shouldSwitch = true;
-						break;
-					}
-				} else if (dir == "desc") {
-					if (x < y) {
-						// If so, mark as a switch and break the loop:
-						shouldSwitch = true;
-						break;
-					}
-				}
-			}
-			if (shouldSwitch) {
-				// If a switch has been marked, make the switch and mark that a switch has been done:
-				rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-				switching = true;
-				// Each time a switch is done, increase this count by 1:
-				switchcount ++;
-			} else {
-				// If no switching has been done AND the direction is "asc", set the direction to "desc" and run the while loop again.
-				if (switchcount == 0 && dir == "asc") {
-					dir = "desc";
-					switching = true;
-				}
-			}
-		}
-	}
-
-	$scope.$on('SteamInfo', function (event, data) {
-		$scope.$apply(function () {
-			$scope.steamData = data;
-		});
-	});
-
-	$scope.$on('addServer', function (event, data) {
-		var table = document.getElementById("servers-table");
-		var row = table.insertRow(table.rows.length);
-		row.insertCell(0).innerHTML = data.location;
-		row.insertCell(1).innerHTML = data.description;
-		row.insertCell(2).innerHTML = data.map;
-		row.insertCell(3).innerHTML = data.players + "/" + data.maxPlayers;
-		row.insertCell(4).innerHTML = data.pps;
-		row.servData = data;
-		row.onclick = selectRow;
-	});
-
-	function selectRow(event) {
-		var table = document.getElementById("servers-table");
-		var src = event.srcElement;
-		var row = src.closest('tr');
-		select(row, table);
-	};
-
-	function receiveServers(data) {
-		//console.log(data)
-		localStorage.setItem('servers', JSON.stringify(data))
-		var table = document.getElementById("serversTableBody");
-		table.innerHTML = "";
-		for (var i = 0; i < data.length; i++) {
-			var v = data[i][Object.keys(data[i])[0]]
-			var ver = v.version.substr(0, v.version.indexOf('.'));
-			if (ver == "0") {
-				//var row = table.rows[i];
-				var servData = {};
-				servData.ip = v.ip;
-				servData.map = SmoothMapName(v.map);
-				servData.players = v.players;
-				servData.location = v.location;
-				servData.name = formatServerName(v.sname);
-				servData.maxPlayers = v.maxplayers;
-				servData.ping = v.pps;
-				servData.color = 'rgba(0,0,0,0)!important';
-				if (v.official) servData.color = 'rgba(255,106,0,0.25)!important';
-				var html = `
-				<tr data-id="${Object.keys(data[i])[0]}" ng-onclick(selectRow(e)>
-				<td style="background-color:${servData.color};">${servData.location}</td>
-				<td style="background-color:${servData.color};">${servData.name}</td>
-				<td style="background-color:${servData.color};">${servData.map}</td>
-				<td style="background-color:${servData.color};">${servData.players}/${servData.maxPlayers}</td>
-				<td style="background-color:${servData.color};">${servData.ping}</td>
-				</tr>
-				`;
-				/*var row = table.insertRow(table.rows.length);
-				row.setAttribute('data-id', Object.keys(data[i])[0]);
-				row.insertCell(0).innerHTML = servData.location;
-				row.insertCell(1).innerHTML = servData.name;
-				row.insertCell(2).innerHTML = servData.map;
-				row.insertCell(3).innerHTML = servData.players + "/" + servData.maxPlayers;
-				row.insertCell(4).innerHTML = servData.ping;*/
-				$('#serversTableBody').append(html);
-				//row.servData = servData;
-				//row.onclick = selectRow;
-			}
-		}
-	};
-
-	selectRowScope = selectRow
-	serversScope = receiveServers;
-}])
-.controller('MultiplayerFavoritesController', ['logger', '$scope', '$state', '$timeout', 'bngApi', function(logger, $scope, $state, $timeout, bngApi) {
-	var vm = this;
-	bngApiScope = bngApi;
-	//bngApi.engineLua('CoreNetwork.getServers()');
-	vm.exit = function ($event) {
-		if ($event)
-		logger.debug('[MultiplayerServersController] exiting by keypress event %o', $event);
-		$state.go('menu.mainmenu');
-	};
-
-	var timeOut = $timeout(function() {
-		if (vm.loadingPage === true) {
-			vm.loadTimeout = true;
-		}
-	}, 10000);
-
-	$scope.$on('$destroy', function () {
-		$timeout.cancel(timeOut);
-		logger.debug('[MultiplayerServersController] destroyed.');
-	});
-
-	function deselect(row) {
-		if (!row) return;
-		row.classList.remove("highlight");
-		row.selected = false;
-	}
-
-	function select(row, table) {
-		var table = document.getElementById("serversTable");
-		deselect(table.selectedRow);
-		row.classList.add("highlight");
-		row.selected = true;
-		table.selectedRow = row;
-		//console.log(row)
-		var id = row.getAttribute('data-id')
-		//console.log(id)
-		var servers = JSON.parse(localStorage.getItem('servers'))
-		for (var i = 0; i < servers.length; i++) {
-			if (servers[i].hasOwnProperty(id)) {
-				//console.log(servers[i][id])
-				var server = servers[i][id];
-				bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
-			}
+		var id = row.getAttribute("data-id")
+		if (id !== null) {
+			var servers = JSON.parse(localStorage.getItem('servers'))
+			var server = servers[id];
+			highlightedServer = servers[id];
+			bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.strippedName}")`);
 		}
 	}
 
@@ -394,49 +237,253 @@ angular.module('beamng.stuff')
 
 	function receiveServers(data) {
 		console.log(data)
-		localStorage.setItem('servers', JSON.stringify(data))
-		var table = document.getElementById("serversTableBody");
-		table.innerHTML = "";
+		var serverArray = new Array();
+
 		for (var i = 0; i < data.length; i++) {
 			var v = data[i][Object.keys(data[i])[0]]
-			var ver = v.version.substr(0, v.version.indexOf('.'));
-			if (ver == "0") {
-				//var row = table.rows[i];
-				var servData = {};
-				servData.ip = v.ip;
-				servData.map = SmoothMapName(v.map);
-				servData.players = v.players;
-				servData.location = v.location;
-				servData.name = formatServerName(v.sname);
-				servData.maxPlayers = v.maxplayers;
-				servData.ping = v.pps;
-				servData.color = 'rgba(0,0,0,0)!important';
-				if (v.official) servData.color = 'rgba(255,106,0,0.25)!important';
+			if(v.version != "java"){
+				v.strippedName = stripCustomFormatting(v.sname);
+				serverArray.push(v);
+			}
+		}
+
+		serverArray.sort((a, b) => a.strippedName.localeCompare(b.strippedName))
+		serverArray.sort((a, b) => (b.official - a.official))
+
+		localStorage.setItem('servers', JSON.stringify(serverArray))
+
+		displayServers()
+	};
+
+	function displayServers() {
+		var table = document.getElementById("serversTableBody");
+		table.innerHTML = "";
+
+		var servers = JSON.parse(localStorage.getItem('servers'))
+		for (var i = 0; i < servers.length; i++) {
+			var filtered = servers[i].strippedName.toLowerCase().includes(document.getElementById("search").value.toLowerCase());
+			if(filtered && document.getElementById("check_hasPlayers").checked && servers[i].players==0) filtered = false;
+			if(filtered && document.getElementById("check_notFull").checked && servers[i].players==servers[i].maxplayers) filtered = false;
+			
+			if(filtered){
+				var bgcolor = 'rgba(0,0,0,0)!important';
+				if (servers[i].official) bgcolor = 'rgba(255,106,0,0.25)!important';
+
 				var html = `
-				<tr data-id="${Object.keys(data[i])[0]}" ng-onclick(selectRow(e)>
-				<td style="background-color:${servData.color};">${servData.location}${officialMark(v.official, false)}</td>
-				<td style="background-color:${servData.color};">${servData.name}</td>
-				<td style="background-color:${servData.color};">${servData.map}</td>
-				<td style="background-color:${servData.color};">${servData.players}/${servData.maxPlayers}</td>
-				<td style="background-color:${servData.color};">${servData.ping}</td>
+				<tr data-id="${i}" ng-onclick(selectRow(e)>
+				<td style="background-color:${bgcolor};">${servers[i].location}</td>
+				<td style="background-color:${bgcolor};">${formatServerName(servers[i].sname)}</td>
+				<td style="background-color:${bgcolor};">${SmoothMapName(servers[i].map)}</td>
+				<td style="background-color:${bgcolor};">${servers[i].players}/${servers[i].maxplayers}</td>
+				<td style="background-color:${bgcolor};">${servers[i].pps}</td>
 				</tr>
 				`;
-				/*var row = table.insertRow(table.rows.length);
-				row.setAttribute('data-id', Object.keys(data[i])[0]);
-				row.insertCell(0).innerHTML = servData.location;
-				row.insertCell(1).innerHTML = servData.name;
-				row.insertCell(2).innerHTML = servData.map;
-				row.insertCell(3).innerHTML = servData.players + "/" + servData.maxPlayers;
-				row.insertCell(4).innerHTML = servData.ping;*/
 				$('#serversTableBody').append(html);
-				//row.servData = servData;
-				//row.onclick = selectRow;
 			}
 		}
 	};
 
-	selectRowScope = selectRow
+	selectRowScope = selectRow;
 	serversScope = receiveServers;
+	displayServerScope = displayServers;
+}])
+.controller('MultiplayerFavoritesController', ['logger', '$scope', '$state', '$timeout', 'bngApi', function(logger, $scope, $state, $timeout, bngApi) {
+	var vm = this;
+	bngApiScope = bngApi;
+	bngApi.engineLua('CoreNetwork.getServers()');
+	vm.exit = function ($event) {
+		if ($event)
+		logger.debug('[MultiplayerServersController] exiting by keypress event %o', $event);
+		$state.go('menu.mainmenu');
+	};
+
+	var timeOut = $timeout(function() {
+		if (vm.loadingPage === true) {
+			vm.loadTimeout = true;
+		}
+	}, 10000);
+
+	$scope.$on('$destroy', function () {
+		$timeout.cancel(timeOut);
+		logger.debug('[MultiplayerServersController] destroyed.');
+	});
+
+	function deselect(row) {
+		if (!row) return;
+		row.classList.remove("highlight");
+		row.selected = false;
+	}
+
+	function select(row, table) {
+		var table = document.getElementById("serversTable");
+		deselect(table.selectedRow);
+		row.classList.add("highlight");
+		row.selected = true;
+		table.selectedRow = row;
+		//console.log(row)
+		var id = row.getAttribute("data-id")
+		if (id !== null) {
+			var servers = JSON.parse(localStorage.getItem('servers'))
+			var server = servers[id];
+			highlightedServer = servers[id];
+			bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.strippedName}")`);
+		}
+	}
+
+	function setColor(row) {
+		if (row.rowIndex % 2 == 0) { // If odd gray / If even lightgray
+			row.style.backgroundColor = "white";
+		} else {
+			row.style.backgroundColor = "#f2f2f2";
+		}
+	}
+
+	vm.sortTable = function(n, data, number) {
+		var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+		table = document.getElementById("servers-table");
+		switching = true;
+		// Set the sorting direction to ascending:
+		dir = "asc";
+		// Make a loop that will continue until no switching has been done:
+		while (switching) {
+			// Start by saying: no switching is done:
+			switching = false;
+			rows = table.rows;
+			// Loop through all table rows (except the first, which contains table headers):
+			for (i = 1; i < (rows.length - 1); i++) {
+				// Start by saying there should be no switching:
+				shouldSwitch = false;
+				// Get the two elements you want to compare, one from current row and one from the next:
+				x = rows[i].servData[data];
+				y = rows[i + 1].servData[data];
+				if (x.toLowerCase) {
+					x = x.toLowerCase()
+					y = y.toLowerCase()
+				}
+				// Check if the two rows should switch place, based on the direction, asc or desc:
+				if (dir == "asc") {
+					if (x > y) {
+						// If so, mark as a switch and break the loop:
+						shouldSwitch = true;
+						break;
+					}
+				} else if (dir == "desc") {
+					if (x < y) {
+						// If so, mark as a switch and break the loop:
+						shouldSwitch = true;
+						break;
+					}
+				}
+			}
+			if (shouldSwitch) {
+				// If a switch has been marked, make the switch and mark that a switch has been done:
+				rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+				switching = true;
+				// Each time a switch is done, increase this count by 1:
+				switchcount ++;
+			} else {
+				// If no switching has been done AND the direction is "asc", set the direction to "desc" and run the while loop again.
+				if (switchcount == 0 && dir == "asc") {
+					dir = "desc";
+					switching = true;
+				}
+			}
+		}
+	}
+
+	$scope.$on('SteamInfo', function (event, data) {
+		$scope.$apply(function () {
+			$scope.steamData = data;
+		});
+	});
+
+	$scope.$on('addServer', function (event, data) {
+		var table = document.getElementById("servers-table");
+		var row = table.insertRow(table.rows.length);
+		row.insertCell(0).innerHTML = data.location;
+		row.insertCell(1).innerHTML = data.description;
+		row.insertCell(2).innerHTML = data.map;
+		row.insertCell(3).innerHTML = data.players + "/" + data.maxPlayers;
+		row.insertCell(4).innerHTML = data.pps;
+		row.servData = data;
+		row.onclick = selectRow;
+	});
+
+	function selectRow(event) {
+		var table = document.getElementById("servers-table");
+		var src = event.srcElement;
+		var row = src.closest('tr');
+		select(row, table);
+	};
+
+	function receiveServers(data) {
+		console.log(data)
+		var serverArray = new Array();
+
+		for (var i = 0; i < data.length; i++) {
+			var v = data[i][Object.keys(data[i])[0]]
+			if(v.version != "java"){
+				v.strippedName = stripCustomFormatting(v.sname);
+				serverArray.push(v);
+			}
+		}
+
+		serverArray.sort((a, b) => a.strippedName.localeCompare(b.strippedName))
+		serverArray.sort((a, b) => (b.official - a.official))
+
+		localStorage.setItem('servers', JSON.stringify(serverArray))
+
+		displayFavorites()
+	};
+	
+	function displayFavorites() {
+		var table = document.getElementById("serversTableBody");
+		table.innerHTML = "";
+
+		var allServers = JSON.parse(localStorage.getItem('servers'))
+		for(var i in allServers)
+			allServers[i].id = i;
+		var favjson = JSON.parse(localStorage.getItem('favorites'))
+		if (favjson == null) return;
+		
+		var servers = new Array();
+
+
+		for(var i in favjson){
+			if(!favjson[i].sname.startsWith("OFFLINE ")) favjson[i].sname  = "OFFLINE " + favjson[i].sname;
+			var foundServer = allServers.filter(s=>s.ip == favjson[i].ip).filter(s=>s.port == favjson[i].port)
+			if (foundServer.length>0) servers.push(foundServer[0]);
+			else servers.push(favjson[i]);
+		}
+
+		console.log(servers);
+		
+		for (var i = 0; i < servers.length; i++) {
+			var filtered = servers[i].strippedName.toLowerCase().includes(document.getElementById("search").value.toLowerCase());
+			if(filtered && document.getElementById("check_hasPlayers").checked && servers[i].players==0) filtered = false;
+			if(filtered && document.getElementById("check_notFull").checked && servers[i].players==servers[i].maxplayers) filtered = false;
+			
+			if(filtered){
+				var bgcolor = 'rgba(0,0,0,0)!important';
+				if (servers[i].official) bgcolor = 'rgba(255,106,0,0.25)!important';
+
+				var html = `
+				<tr data-id="${servers[i].id}" ng-onclick(selectRow(e)>
+				<td style="background-color:${bgcolor};">${servers[i].location}</td>
+				<td style="background-color:${bgcolor};">${formatServerName(servers[i].sname)}</td>
+				<td style="background-color:${bgcolor};">${SmoothMapName(servers[i].map)}</td>
+				<td style="background-color:${bgcolor};">${servers[i].players}/${servers[i].maxplayers}</td>
+				<td style="background-color:${bgcolor};">${servers[i].pps}</td>
+				</tr>
+				`;
+				$('#serversTableBody').append(html);
+			}
+		}
+	};
+
+	selectRowScope = selectRow;
+	serversScope = receiveServers;
+	displayServerScope = displayFavorites;
 }])
 
 .controller('MultiplayerSettingsController', ['logger', '$scope', '$state', '$timeout', 'bngApi',
@@ -488,6 +535,10 @@ function(logger, $scope, $state, $timeout, bngApi) {
 
 function receiveServers(data) {
 	serversScope(data);
+}
+
+function displayServers() {
+	displayServerScope();
 }
 
 function toTitleCase(str) {
@@ -694,8 +745,7 @@ function returnDefault(data, type) {
 	else return data;
 }
 function listPlayers(s) {
-	console.log(s)
-	if (s != undefined || s =="") {
+	if (s != undefined || s != "") {
 		var re = new RegExp(";", 'g');
 		s = s.replace(re, ', ');
 		s = s.substring(0, s.length -2);
@@ -705,7 +755,7 @@ function listPlayers(s) {
 	}
 }
 
-function format ( d ) {
+function formatServerDetailsRow ( d ) {
     // `d` is the original data object for the row
 		console.log(d)
     return `
@@ -732,7 +782,7 @@ function format ( d ) {
 				</div>
 				<div class="row" style="padding-left: 10px;">
 					<md-button id="serverconnect-button" class="button md-button md-default-theme" ng-class="" ng-click="multiplayer.connect()" style="margin-left: 10px;">Connect</md-button>
-					<md-button id="addFav-button" class="button md-button md-default-theme" ng-class="" ng-click="multiplayer.addFav()" style="margin-left: 10px;">Add Favorite</md-button>
+					<md-button id="addFav-button" class="button md-button md-default-theme" ng-class="" ng-click="addToFav()" style="margin-left: 10px;">Add Favorite</md-button>
 				</div>
 				<div class="row">
 					<h4></h4>
@@ -778,31 +828,25 @@ window.onload = function() {
 			} else {
 			// Open this row
 				var id = $(e.currentTarget).attr("data-id")
-				console.log(id)
-				var servers = JSON.parse(localStorage.getItem('servers'))
-				for (var i = 0; i < servers.length; i++) {
-					if (servers[i].hasOwnProperty(id)) {
-						//console.log(servers[i][id])
-						var server = servers[i][id];
-						//$(e.currentTarget).append( format(server) ).show();
-						$(format(server)).insertAfter($(e.currentTarget)).show();
-						$(e.currentTarget).addClass('shown');
-					}
+				if (id !== undefined) {
+					var servers = JSON.parse(localStorage.getItem('servers'))
+					var server = servers[id];
+					$(formatServerDetailsRow(server)).insertAfter($(e.currentTarget)).show();
+					$(e.currentTarget).addClass('shown');
 				}
 			}
 		});
-	
+
 		$(document).on('click', '#addFav-button', function(e) {
-			console.log(e)
+			addToFav();
 		});
-	
+
 		// Add event listener for opening and closing details
 		$(document).on('click', '#serverconnect-button', function(e) {
 			connectScope();
 		});
 	} else {
-		// jQuery is not loaded
-		//alert("Doesn't Work");
+		//alert("jQuery is not loaded");
 	}
 }
 
@@ -832,9 +876,11 @@ var serverStyleArray = [
     "^m",
     "^n",
     "^o",
+    "^r",
     "^p"
 ];
-function stripCustomFormatting(name) { // this is used for the Session UI app as well
+
+function stripCustomFormatting(name){
 	for (var i = 0; i < serverStyleArray.length; i++){
 		while (name.includes(serverStyleArray[i])){
 			name = name.replace(serverStyleArray[i], "");
@@ -843,24 +889,80 @@ function stripCustomFormatting(name) { // this is used for the Session UI app as
 	return name;
 }
 
+function addToFav(fname, fip, fport) {
+	var serverToAdd = new Object();
+	if (fname !== undefined) {
+		serverToAdd.ip = fip
+		serverToAdd.port = fport
+		serverToAdd.sdesc = fname
+		serverToAdd.sname = fname
+		serverToAdd.strippedName = fname
+
+		serverToAdd.cversion = "-1"
+		serverToAdd.location = "??"
+		serverToAdd.map = "??"
+		serverToAdd.maxplayers = "-1"
+		serverToAdd.modlist = ""
+		serverToAdd.modstotal = "-1"
+		serverToAdd.modstotalsize = "-1"
+		serverToAdd.official = 0
+		serverToAdd.owner = ""
+		serverToAdd.players = "-1"
+		serverToAdd.playerslist = ""
+		serverToAdd.pps = "-1"
+		serverToAdd.private = false
+		serverToAdd.time = 0
+		serverToAdd.version = "-1"
+																			}
+														else
+										{
+		serverToAdd = highlightedServer;
+		serverToAdd.players  = 0;
+		serverToAdd.maxplayers  = 0;
+		serverToAdd.time = 0;
+		serverToAdd.pps = 0;
+	}
+
+
+
+	var favjson = JSON.parse(localStorage.getItem('favorites'));
+	var favArray = new Array();
+
+	console.log(favjson);
+
+	if(favjson != null)
+		for(var i in favjson)
+			if(favArray.filter(s=>s.ip == favjson[i].ip).filter(s=>s.port == favjson[i].port).length==0)
+				favArray.push(favjson[i]);
+
+	if(favArray.filter(s=>s.ip == serverToAdd.ip).filter(s=>s.port == serverToAdd.port).length==0)
+		favArray.push(serverToAdd);
+
+	//favArray = [...new Set(favArray)];
+
+	favArray.sort((a, b) => (a.official > b.official) ? -1 : 1)
+
+	console.log(serverToAdd);
+	console.log(favArray);
+
+	localStorage.setItem('favorites', JSON.stringify(favArray))
+}
 
 function findPlayer(pname, join=false){
 	pname = pname.toLowerCase();
 	var servers = JSON.parse(localStorage.getItem('servers'))
 	for (var id = 0; id < servers.length; id++) {
-		if (servers[id].hasOwnProperty(id)) {
-			var server = servers[id][id];
-			if (server.playerslist !== undefined){
-				if (server.playerslist.toLowerCase().includes(pname)){
-					var names = server.playerslist.split(';').filter(function (item) { return item.toLowerCase().includes(pname); });
-					console.log("found player '" +names[0]+ "'\n on server ID:" +id+ "\n Title: " +stripCustomFormatting(server.sname));
-					if(join){
-						bngApiScope.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
-						if (document.getElementById('LoadingServer') !== null) document.getElementById('LoadingServer').style.display = 'block'
-						bngApiScope.engineLua('CoreNetwork.connectToServer()');
-					}
-					return id;
+		var server = servers[id];
+		if (server.playerslist !== undefined){
+			if (server.playerslist.toLowerCase().includes(pname)){
+				var names = server.playerslist.split(';').filter(function (item) { return item.toLowerCase().includes(pname); });
+				console.log("found player '" +names[0]+ "'\n on server ID:" +id+ "\n Title: " +stripCustomFormatting(server.sname));
+				if(join){
+					bngApiScope.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.sname}")`);
+					if (document.getElementById('LoadingServer') !== null) document.getElementById('LoadingServer').style.display = 'block';
+					bngApiScope.engineLua('CoreNetwork.connectToServer()');
 				}
+				return id;
 			}
 		}
 	}

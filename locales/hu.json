@@ -2655,6 +2655,8 @@
 	"ui.multiplayer.refresh": "Frissítés",
 	"ui.multiplayer.connect": "Csatlakozás",
 	
+	"ui.multiplayer.addCustomServer": "Szerver hozzáadása",
+	
 	"ui.multiplayer.location": "Ország",
 	"ui.multiplayer.description": "Név",
 	"ui.multiplayer.map": "Pálya",

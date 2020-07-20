@@ -7,6 +7,21 @@
     </div>
 </div>
 
+<div id="addCustomFav" style="display: none;">
+
+	<md-list-item layout class="md-padding" style="padding-top: 15px; padding-bottom: 0;">
+		<h1>Add custom server :</h1>
+		<md-button id="" class="button close-button" ng-class="" ng-click="multiplayer.closePopup()"> X </md-button>
+	</md-list-item>
+
+	<center>
+		<input type="text" id="customFavName" name="customFavName" placeholder="Custom server"/>
+		<input type="text" id="customFavIP" name="customFavIP" placeholder="Server IP"/>
+		<input type="text" id="customFavPort" name="customFavPort" placeholder="Server port"/>
+		<md-button id="" class="button" ng-click="multiplayer.addCustomServer()">Save</md-button>
+	</center>
+</div>
+
 <md-content id="back" layout="column">
 
     <md-toolbar class="md-primary" id="top-bar">

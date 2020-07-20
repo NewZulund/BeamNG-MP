@@ -25,6 +25,8 @@ local nicknameMap = {}
 local invertedVehiclesMap = {}
 local onVehicleSpawnedAllowed = true
 local onVehicleDestroyedAllowed = true
+local syncTimer = 0
+local syncVehIDs = {}
 -- ============= VARIABLES =============
 
 
@@ -151,7 +153,8 @@ local function sendCustomVehicleData(gameVehicleID, vehicleConfig)
 	GameNetwork.send('Oc:'..getServerVehicleID(gameVehicleID)..':'..stringToSend)--Network.buildPacket(1, 2020, 0, stringToSend))	-- Send table that contain all vehicle informations for each vehicle
 
 	syncTimer = 0
-	syncVehIDs[gameVehicleID] = nil
+	syncVehIDs[gameVehicleID] = 0
+	print("clearing id "..gameVehicleID.." from the sync table")
 end
 --=========================================== RECEIVE MODIFIED VEHICLE DATA =============================================
 
@@ -216,9 +219,6 @@ local function onServerVehicleSpawned(playerRole, playerNickname, serverVehicleI
 	if currentVeh then be:enterVehicle(0, currentVeh) end -- Camera fix
 end
 --================================= ON VEHICLE SPAWNED (SERVER) ===================================
-
-local syncTimer = 0
-local syncVehIDs = {}
 
 --================================= ON VEHICLE SPAWNED (CLIENT) ===================================
 local function onVehicleSpawned(gameVehicleID)
@@ -476,7 +476,7 @@ local function onUpdate(dt)
 						tag = " [Moderator]"
 					elseif nicknameMap[tostring(gameVehicleID)].role == "ADM" then
 						forecolor = ColorF(218/255, 0, 78/255, 255/255)
-						backcolor = ColorI(218, 0, 78, 127)
+						backcolor = ColorI(200, 0, 65, 127)
 						tag = " [Admin]"
 					elseif nicknameMap[tostring(gameVehicleID)].role == "GDEV" then
 						forecolor = ColorF(252/255, 107/255, 3/255, 255/255)
@@ -510,7 +510,10 @@ local function onUpdate(dt)
 				end
 
 
-				if syncVehIDs[gameVehicleID] ~= nil then
+				if syncVehIDs[gameVehicleID] ~= nil and syncVehIDs[gameVehicleID] ~= 0 then
+				
+					print("veh id "..gameVehicleID.." has value "..syncVehIDs[gameVehicleID].." in the sync table")
+
 					syncTimer = syncTimer+dt
 					if syncTimer > 10 then
 						shouldSync = true

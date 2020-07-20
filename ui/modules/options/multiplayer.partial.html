@@ -91,18 +91,14 @@
   <md-list-item md-no-ink>
     <p>{{:: 'ui.options.multiplayer.debugOutput' | translate }}</p>
     <md-checkbox ng-model="options.data.values.showDebugOutput" ng-change="options.applyState()"></md-checkbox>
-	
   </md-list-item>
 
   <md-list-item layout class="md-padding" style="padding-top:0; padding-bottom:0">
-      <md-tooltip md-direction="right">{{:: 'ui.options.multiplayer.launcherPort.tooltip' | translate}}</md-tooltip>
-      <p flex="50">{{:: 'ui.options.multiplayer.launcherPort' | translate }}</p>
-    <md-slider flex
-      ng-model="options.data.values.launcherPort" min="4444" max="4466" step="1" aria-label="_"
-      ng-change="options.applyState()">
-    </md-slider>
-    <span ng-if="options.data.values.launcherPort > 4444" style="margin-left:15px">{{ options.data.values.launcherPort }}</span>
-    <span ng-if="options.data.values.launcherPort == 4444" style="margin-left:15px">4444 (Default)</span>
+	<p flex="75">{{:: 'ui.options.multiplayer.launcherPort' | translate }}</p>
+	<md-input-container flex data-tip>
+	<md-tooltip md-direction="right">Default is 4444</md-tooltip>
+	<input type="number" step="1" aria-label="portSelect" ng-model="options.data.values.launcherPort" min="4444" max="4466" ng-change="options.applyState()"/>
+	</md-input-container>
   </md-list-item>
 
   <md-list-item md-no-ink>
