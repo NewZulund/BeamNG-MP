@@ -1,10 +1,10 @@
 <div ng-controller="Session" id="Session" class="bngApp multiplayersession" ng-init="init()" ng-style="background-color: rgba(0, 0, 0, 0.5)">
   <div class="col col-wide">
-    <span><span id="Session-Status" style="text-overflow: ellipsis">Server: BeamMP Development Server</span></span>
+    <span><span id="Session-Status" style="text-overflow: ellipsis">Connected</span></span>
   </div>
   <div class="col col-right">
     <span>Players: <span id="Session-PlayerCount">0/10</span></span>
-    <span>Ping: <span id="Session-Ping">12ms?</span></span>
+    <span>Ping: <span id="Session-Ping">-1 ms</span></span>
     <button type="button" name="button" class="QuitButton" ng-click="mpquit()">Quit</button>
   </div>
   <style>

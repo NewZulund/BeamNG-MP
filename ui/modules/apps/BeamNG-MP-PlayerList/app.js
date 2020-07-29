@@ -70,9 +70,9 @@ function playerList(list) {
 				if(parsedList[i] != nickname){
 					var btn = document.createElement("BUTTON");
 					btn.appendChild(document.createTextNode("TP"));
+					cell1.setAttribute("onclick","showPlayerInfo('"+parsedList[i]+"')");
 					btn.setAttribute("onclick","teleportToPlayer('"+parsedList[i]+"')");
 					cell2.appendChild(btn);
-					cell1.setAttribute("onclick","teleportToPlayer('"+parsedList[i]+"')");
 				}
 			}
 		}
@@ -92,10 +92,15 @@ function clearPlayerList() {
 }
 
 function teleportToPlayer(targetPlayerName) {
-	console.log("teleportEvent");
-	addMessage("Teleporting to " + targetPlayerName);
+	console.log("teleportEvent: " + targetPlayerName);
+	//addMessage("Teleporting to " + targetPlayerName);
 	//actually teleport the car lol
 }
+
+function showPlayerInfo(targetPlayerName) {
+	console.log("showPlayerInfoEvent: " + targetPlayerName);
+}
+
 
 function setNickname(n) {
 	nickname = n

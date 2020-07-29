@@ -63,6 +63,7 @@ local function updatePlayersList(playersString)
 end
 
 local function setPing(ping)
+  log("I", "UI", tostring(ping))
   if tonumber(ping) > -1 then
 	be:executeJS('setPing("'..ping..' ms")')
   end
@@ -126,10 +127,10 @@ local function ready(src)
 	if ready then
 	  ready = false
 	  GameNetwork.connectToLauncher()
-	  
-	  if CoreNetwork.Server.NAME ~= nil then
-		setStatus("Server: "..CoreNetwork.Server.NAME)
-	  end
+	end
+
+	if CoreNetwork.Server.NAME ~= nil then
+	  setStatus("Server : "..CoreNetwork.Server.NAME)
 	end
   end
 end

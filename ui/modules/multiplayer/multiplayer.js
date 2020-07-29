@@ -1,4 +1,4 @@
-var serversScope, selectRowScope, connectScope, displayServerScope, bngApiScope;
+var serversScope, selectRowScope, connectScope, displayServerScope, showDetailsScope, bngApiScope;
 var highlightedServer;
 angular.module('beamng.stuff')
 
@@ -64,7 +64,7 @@ angular.module('beamng.stuff')
 
 	vm.addCustomServer = function() {
 
-		addToFav(document.getElementById('customFavName').value,
+		addFav(document.getElementById('customFavName').value,
 					document.getElementById('customFavIP').value,
 					document.getElementById('customFavPort').value);
 
@@ -74,6 +74,7 @@ angular.module('beamng.stuff')
 		document.getElementById('customFavName').value = '';
 		document.getElementById('customFavIP').value = '';
 		document.getElementById('customFavPort').value = '';
+		refreshList();
 	};
 
 	vm.stateName = $state.current.name;
@@ -282,10 +283,49 @@ angular.module('beamng.stuff')
 			}
 		}
 	};
+	
+	function formatServerDetailsRow ( d ) {
+    // `d` is the original data object for the row
+		console.log(d)
+    return `
+		<tr id="ServerInfoRow">
+			<td colspan="5">
+				<h1 style="padding-left:10px;">`+officialMark(d.official, true)+formatServerName(d.sname)+`</h1>
+					<div class="row">
+					<div class="col">
+						<table class="description-table">
+							<tr><td>Owner:</td><td>${d.owner}</td></tr>
+							<tr><td>Map:</td><td>${SmoothMapName(d.map)}</td></tr>
+							<tr><td>Players:</td><td>${d.players}/${d.maxplayers}</td></tr>
+							<tr><td valign="top">Description:</td><td>${formatDescriptionName(d.sdesc)}</td></tr>
+						</table>
+					</div>
+					<div class="col">
+						<ul class="serverItemDetails">
+							<li>PPS: ${d.pps}</li>
+							<li>Mods: ${modCount(d.modlist)}</li>
+							<li>Mod Names: ${modList(d.modlist)}</li>
+							<li>Total Mods Size: ${formatBytes(d.modstotalsize) || "0"}</li>
+						</ul>
+					</div>
+				</div>
+				<div class="row" style="padding-left: 10px;">
+					<md-button id="serverconnect-button" class="button md-button md-default-theme" ng-class="" ng-click="multiplayer.connect()" style="margin-left: 10px;">Connect</md-button>
+					<md-button id="addFav-button"        class="button md-button md-default-theme" ng-class="" ng-click="addFav()"            style="margin-left: 10px;">Add Favorite</md-button>
+				</div>
+				<div class="row">
+					<h4></h4>
+
+					<p>${listPlayers(d.playerslist)}</p>
+				</div>
+	    </td>
+		</tr>`;
+	};
 
 	selectRowScope = selectRow;
 	serversScope = receiveServers;
 	displayServerScope = displayServers;
+	showDetailsScope = formatServerDetailsRow;
 }])
 .controller('MultiplayerFavoritesController', ['logger', '$scope', '$state', '$timeout', 'bngApi', function(logger, $scope, $state, $timeout, bngApi) {
 	var vm = this;
@@ -322,10 +362,20 @@ angular.module('beamng.stuff')
 		table.selectedRow = row;
 		//console.log(row)
 		var id = row.getAttribute("data-id")
+		console.log(id);
 		if (id !== null) {
-			var servers = JSON.parse(localStorage.getItem('servers'))
-			var server = servers[id];
-			highlightedServer = servers[id];
+			var server = null;
+			if(id.split(',')[0]>-1) {
+				id = id.split(',')[0];
+				server = JSON.parse(localStorage.getItem('servers'))[id];
+			} else {
+				id = id.split(',')[1];
+				console.log(id);
+				server = JSON.parse(localStorage.getItem('favorites'))[id];
+				server.strippedName = server.strippedName.replace('UNKNOWN ', '');
+			}
+
+			highlightedServer = server;
 			bngApi.engineLua(`CoreNetwork.setServer("${id}", "${server.ip}", "${server.port}", "${server.modlist}", "${server.strippedName}")`);
 		}
 	}
@@ -433,16 +483,17 @@ angular.module('beamng.stuff')
 
 		localStorage.setItem('servers', JSON.stringify(serverArray))
 
-		displayFavorites()
+		displayServers()
 	};
 	
-	function displayFavorites() {
+	function displayServers() {
 		var table = document.getElementById("serversTableBody");
 		table.innerHTML = "";
 
 		var allServers = JSON.parse(localStorage.getItem('servers'))
 		for(var i in allServers)
 			allServers[i].id = i;
+		
 		var favjson = JSON.parse(localStorage.getItem('favorites'))
 		if (favjson == null) return;
 		
@@ -450,25 +501,34 @@ angular.module('beamng.stuff')
 
 
 		for(var i in favjson){
-			if(!favjson[i].sname.startsWith("OFFLINE ")) favjson[i].sname  = "OFFLINE " + favjson[i].sname;
-			var foundServer = allServers.filter(s=>s.ip == favjson[i].ip).filter(s=>s.port == favjson[i].port)
-			if (foundServer.length>0) servers.push(foundServer[0]);
-			else servers.push(favjson[i]);
+			favjson[i].sname  = "UNKNOWN " + favjson[i].sname;
+			var foundServers = allServers.filter(s=>s.ip == favjson[i].ip).filter(s=>s.port == favjson[i].port)
+			if (foundServers.length>0) {
+				foundServers[0].favid = i;
+				servers.push(foundServers[0]);
+			} else {
+				favjson[i].id = -1;
+				favjson[i].favid = i;
+				servers.push(favjson[i]);
+			}
 		}
 
 		console.log(servers);
-		
+
 		for (var i = 0; i < servers.length; i++) {
 			var filtered = servers[i].strippedName.toLowerCase().includes(document.getElementById("search").value.toLowerCase());
 			if(filtered && document.getElementById("check_hasPlayers").checked && servers[i].players==0) filtered = false;
 			if(filtered && document.getElementById("check_notFull").checked && servers[i].players==servers[i].maxplayers) filtered = false;
-			
+
 			if(filtered){
 				var bgcolor = 'rgba(0,0,0,0)!important';
 				if (servers[i].official) bgcolor = 'rgba(255,106,0,0.25)!important';
 
+				console.log(servers[i].id);
+				console.log(servers[i].favid);
+
 				var html = `
-				<tr data-id="${servers[i].id}" ng-onclick(selectRow(e)>
+				<tr data-id="${servers[i].id},${servers[i].favid}" ng-onclick(selectRow(e)>
 				<td style="background-color:${bgcolor};">${servers[i].location}</td>
 				<td style="background-color:${bgcolor};">${formatServerName(servers[i].sname)}</td>
 				<td style="background-color:${bgcolor};">${SmoothMapName(servers[i].map)}</td>
@@ -481,9 +541,48 @@ angular.module('beamng.stuff')
 		}
 	};
 
+	function formatServerDetailsRow ( d ) {
+    // `d` is the original data object for the row
+		console.log(d)
+    return `
+		<tr id="ServerInfoRow">
+			<td colspan="5">
+				<h1 style="padding-left:10px;">`+officialMark(d.official, true)+formatServerName(d.sname)+`</h1>
+					<div class="row">
+					<div class="col">
+						<table class="description-table">
+							<tr><td>Owner:</td><td>${d.owner}</td></tr>
+							<tr><td>Map:</td><td>${SmoothMapName(d.map)}</td></tr>
+							<tr><td>Players:</td><td>${d.players}/${d.maxplayers}</td></tr>
+							<tr><td valign="top">Description:</td><td>${formatDescriptionName(d.sdesc)}</td></tr>
+						</table>
+					</div>
+					<div class="col">
+						<ul class="serverItemDetails">
+							<li>PPS: ${d.pps}</li>
+							<li>Mods: ${modCount(d.modlist)}</li>
+							<li>Mod Names: ${modList(d.modlist)}</li>
+							<li>Total Mods Size: ${formatBytes(d.modstotalsize) || "0"}</li>
+						</ul>
+					</div>
+				</div>
+				<div class="row" style="padding-left: 10px;">
+					<md-button id="serverconnect-button" class="button md-button md-default-theme" ng-class="" ng-click="multiplayer.connect()" style="margin-left: 10px;">Connect</md-button>
+					<md-button id="removeFav-button"     class="button md-button md-default-theme" ng-class="" ng-click="removeFav()"           style="margin-left: 10px;">Remove Favorite</md-button>
+				</div>
+				<div class="row">
+					<h4></h4>
+
+					<p>${listPlayers(d.playerslist)}</p>
+				</div>
+	    </td>
+		</tr>`;
+	};
+
 	selectRowScope = selectRow;
 	serversScope = receiveServers;
-	displayServerScope = displayFavorites;
+	displayServerScope = displayServers;
+	showDetailsScope = formatServerDetailsRow;
 }])
 
 .controller('MultiplayerSettingsController', ['logger', '$scope', '$state', '$timeout', 'bngApi',
@@ -755,43 +854,7 @@ function listPlayers(s) {
 	}
 }
 
-function formatServerDetailsRow ( d ) {
-    // `d` is the original data object for the row
-		console.log(d)
-    return `
-		<tr id="ServerInfoRow">
-			<td colspan="5">
-				<h1 style="padding-left:10px;">`+officialMark(d.official, true)+formatServerName(d.sname)+`</h1>
-					<div class="row">
-					<div class="col">
-						<table class="description-table">
-							<tr><td>Owner:</td><td>${d.owner}</td></tr>
-							<tr><td>Map:</td><td>${SmoothMapName(d.map)}</td></tr>
-							<tr><td>Players:</td><td>${d.players}/${d.maxplayers}</td></tr>
-							<tr><td valign="top">Description:</td><td>${formatDescriptionName(d.sdesc)}</td></tr>
-						</table>
-					</div>
-					<div class="col">
-						<ul class="serverItemDetails">
-							<li>PPS: ${d.pps}</li>
-							<li>Mods: ${modCount(d.modlist)}</li>
-							<li>Mod Names: ${modList(d.modlist)}</li>
-							<li>Total Mods Size: ${formatBytes(d.modstotalsize) || "0"}</li>
-						</ul>
-					</div>
-				</div>
-				<div class="row" style="padding-left: 10px;">
-					<md-button id="serverconnect-button" class="button md-button md-default-theme" ng-class="" ng-click="multiplayer.connect()" style="margin-left: 10px;">Connect</md-button>
-					<md-button id="addFav-button" class="button md-button md-default-theme" ng-class="" ng-click="addToFav()" style="margin-left: 10px;">Add Favorite</md-button>
-				</div>
-				<div class="row">
-					<h4></h4>
 
-					<p>${listPlayers(d.playerslist)}</p>
-				</div>
-	    </td>
-		</tr>`;
-}
 
 window.onload = function() {
 	if (window.jQuery) {
@@ -816,32 +879,41 @@ window.onload = function() {
 			"order": [[1, 'asc']]
 		});
 
-		// Add event listener for opening and closing details
+		// Event listener for opening and closing details
 		$(document).on('click', '#serversTableBody > tr', function(e) {
 			$("#ServerInfoRow").remove();
-			var tr = e;//$(this).closest('tr');
-			var row = table.row( tr );
-			if ( row.child.isShown() ) {
-				// This row is already open - close it
+			var row = table.row(e);
+			if ( row.child.isShown() ) { // This row is already open - close it
 				row.child.hide();
-				tr.removeClass('shown');
-			} else {
-			// Open this row
+				e.removeClass('shown');
+			} else { // Open this row
 				var id = $(e.currentTarget).attr("data-id")
 				if (id !== undefined) {
-					var servers = JSON.parse(localStorage.getItem('servers'))
-					var server = servers[id];
-					$(formatServerDetailsRow(server)).insertAfter($(e.currentTarget)).show();
-					$(e.currentTarget).addClass('shown');
+					var server;
+					if(id.split(',')[0]>-1) {
+						id = id.split(',')[0];
+						server = JSON.parse(localStorage.getItem('servers'))[id];
+					} else {
+						id = id.split(',')[1];
+						server = JSON.parse(localStorage.getItem('favorites'))[id];
+					}
+
+					$(showDetailsScope(server)).insertAfter($(e.currentTarget)).show();
+					(e.currentTarget).classList.add('shown');
 				}
 			}
 		});
 
+		// Event listener for adding selected server to favs
 		$(document).on('click', '#addFav-button', function(e) {
-			addToFav();
+			addFav();
 		});
-
-		// Add event listener for opening and closing details
+		$(document).on('click', '#removeFav-button', function(e) {
+			removeFav();
+		});
+		
+		
+		// Event listener for connecting to a selected server
 		$(document).on('click', '#serverconnect-button', function(e) {
 			connectScope();
 		});
@@ -889,30 +961,53 @@ function stripCustomFormatting(name){
 	return name;
 }
 
-function addToFav(fname, fip, fport) {
+function removeFav() {
+	var favjson = JSON.parse(localStorage.getItem('favorites'));
+	var favArray = new Array();
+
+	if(favjson != null)
+		for(var i in favjson)
+			if(favArray.filter(s=>s.ip == favjson[i].ip).filter(s=>s.port == favjson[i].port).length==0)
+				favArray.push(favjson[i]);
+	
+	for(var i in favArray)
+		if(favArray[i].ip == highlightedServer.ip
+		&& favArray[i].port == highlightedServer.port
+		&& favArray[i].sname == highlightedServer.sname) 
+			favArray.splice(i, 1);
+
+
+	console.log(highlightedServer);
+
+	localStorage.setItem('favorites', JSON.stringify(favArray))
+	bngApiScope.engineLua('CoreNetwork.getServers()');
+}
+
+function addFav(fname, fip, fport) {
 	var serverToAdd = new Object();
 	if (fname !== undefined) {
-		serverToAdd.ip = fip
-		serverToAdd.port = fport
-		serverToAdd.sdesc = fname
-		serverToAdd.sname = fname
-		serverToAdd.strippedName = fname
+		serverToAdd.ip = fip            ,
+		serverToAdd.port = fport        ,
+		serverToAdd.sdesc = fname       ,
+		serverToAdd.sname = fname       ,
+		serverToAdd.strippedName = fname,
 
-		serverToAdd.cversion = "-1"
-		serverToAdd.location = "??"
-		serverToAdd.map = "??"
-		serverToAdd.maxplayers = "-1"
-		serverToAdd.modlist = ""
-		serverToAdd.modstotal = "-1"
-		serverToAdd.modstotalsize = "-1"
-		serverToAdd.official = 0
-		serverToAdd.owner = ""
-		serverToAdd.players = "-1"
-		serverToAdd.playerslist = ""
-		serverToAdd.pps = "-1"
-		serverToAdd.private = false
-		serverToAdd.time = 0
-		serverToAdd.version = "-1"
+		serverToAdd.cversion = "-1"     ,
+		serverToAdd.location = "N/A"    ,
+		serverToAdd.map = "Unknown"     ,
+		serverToAdd.modlist = ""        ,
+		serverToAdd.modstotal = "N/A"   ,
+		serverToAdd.modstotalsize = 0   ,
+		serverToAdd.official = 0        ,
+		serverToAdd.owner = ""          ,
+		serverToAdd.players = "N"       ,
+		serverToAdd.maxplayers = "A"    ,
+		serverToAdd.playerslist = ""    ,
+		serverToAdd.pps = "N/A"         ,
+		serverToAdd.private = false     ,
+		serverToAdd.time = 0            ,
+		serverToAdd.version = "-1"      ,
+		serverToAdd.id = -1
 																			}
 														else
 										{
@@ -921,6 +1016,7 @@ function addToFav(fname, fip, fport) {
 		serverToAdd.maxplayers  = 0;
 		serverToAdd.time = 0;
 		serverToAdd.pps = 0;
+		serverToAdd.id = -1;
 	}
 
 
@@ -946,6 +1042,7 @@ function addToFav(fname, fip, fport) {
 	console.log(favArray);
 
 	localStorage.setItem('favorites', JSON.stringify(favArray))
+	bngApiScope.engineLua('CoreNetwork.getServers()');
 }
 
 function findPlayer(pname, join=false){
