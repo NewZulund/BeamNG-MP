@@ -168,7 +168,7 @@ local settingsList = {       -- { storage, default_value }
   autoClutch                  = { cloud  , true },
   autoThrottle                = { cloud  , true },
   gearboxSafety               = { cloud  , true },
-  useFmodLiveUpdate           = { cloud  , false },
+  useFmodLiveUpdate           = { disk   , false },
   defaultShifterMode          = { deprecated, nil },
   gameplayDefaultShifterMode  = { deprecated, nil },
   autoShiftPrevention         = { deprecated, nil },
@@ -279,6 +279,8 @@ local settingsList = {       -- { storage, default_value }
 
   -- Multiplayer Settings
   showNameTags                             = { disk, true },
+  nameTagAlternate                         = { disk, true },
+  nameTagShowDistance                      = { disk, true },
   showDebugOutput                          = { disk, false },
   launcherPort                             = { disk, 4444 }
 
@@ -376,7 +378,7 @@ local function refreshLanguages()
   -- list available languages
   options.userLanguagesAvailable = {}
   table.insert(options.userLanguagesAvailable, {key="", name="Automatic"}) -- the empty ('') language will be auto - it'll use the OS/steam lang
-  local locales = FS:findFilesByRootPattern('/locales/', '*.json', -1, true, false)
+  local locales = FS:findFiles('/locales/', '*.json', -1, true, false)
 
   for _, l in pairs(locales) do
     local key = string.match(l, 'locales/([^\\.]+).json')
@@ -453,31 +455,32 @@ local function setState(newState, ignoreCache)
     values.interpolateFull        = nil
   end
 
-  if values.replayLevel            ~= nil then be.replayLevel            = values.replayLevel            end
-  if values.replayAlpha            ~= nil then be.replayAlpha            = values.replayAlpha            end
-  if values.replayA                ~= nil then be.replayA                = values.replayA                end
-  if values.replayB                ~= nil then be.replayB                = values.replayB                end
-  if values.replayC                ~= nil then be.replayC                = values.replayC                end
-  if values.replayD                ~= nil then be.replayD                = values.replayD                end
-  if values.replayE                ~= nil then be.replayE                = values.replayE                end
-  if values.replayF                ~= nil then be.replayF                = values.replayF                end
-  if values.replayG                ~= nil then be.replayG                = values.replayG                end
-  if values.replayH                ~= nil then be.replayH                = values.replayH                end
-  if values.replayI                ~= nil then be.replayI                = values.replayI                end
-  if values.replayJ                ~= nil then be.replayJ                = values.replayJ                end
-  if values.replayK                ~= nil then be.replayK                = values.replayK                end
-  if values.replayL                ~= nil then be.replayL                = values.replayL                end
-  if values.replayM                ~= nil then be.replayM                = values.replayM                end
-  if values.replayN                ~= nil then be.replayN                = values.replayN                end
-  if values.replayO                ~= nil then be.replayO                = values.replayO                end
-  if values.replayP                ~= nil then be.replayP                = values.replayP                end
-  --if values.replayQ                ~= nil then be.replayQ                = values.replayQ                end
-  --if values.replayR                ~= nil then be.replayR                = values.replayR                end
+  local stream = be:getEngineStream()
+  if values.replayLevel            ~= nil then stream.replayLevel            = values.replayLevel            end
+  if values.replayAlpha            ~= nil then stream.replayAlpha            = values.replayAlpha            end
+  if values.replayA                ~= nil then stream.replayA                = values.replayA                end
+  if values.replayB                ~= nil then stream.replayB                = values.replayB                end
+  if values.replayC                ~= nil then stream.replayC                = values.replayC                end
+  if values.replayD                ~= nil then stream.replayD                = values.replayD                end
+  if values.replayE                ~= nil then stream.replayE                = values.replayE                end
+  if values.replayF                ~= nil then stream.replayF                = values.replayF                end
+  if values.replayG                ~= nil then stream.replayG                = values.replayG                end
+  if values.replayH                ~= nil then stream.replayH                = values.replayH                end
+  if values.replayI                ~= nil then stream.replayI                = values.replayI                end
+  if values.replayJ                ~= nil then stream.replayJ                = values.replayJ                end
+  if values.replayK                ~= nil then stream.replayK                = values.replayK                end
+  if values.replayL                ~= nil then stream.replayL                = values.replayL                end
+  if values.replayM                ~= nil then stream.replayM                = values.replayM                end
+  if values.replayN                ~= nil then stream.replayN                = values.replayN                end
+  if values.replayO                ~= nil then stream.replayO                = values.replayO                end
+  if values.replayP                ~= nil then stream.replayP                = values.replayP                end
+  --if values.replayQ                ~= nil then stream.replayQ                = values.replayQ                end
+  --if values.replayR                ~= nil then stream.replayR                = values.replayR                end
 
-  if values.interpolatePosition    ~= nil then be.interpolatePosition    = values.interpolatePosition    end
-  if values.interpolateAlternative ~= nil then be.interpolateAlternative = values.interpolateAlternative end
-  if values.interpolateFull        ~= nil then be.interpolateFull        = values.interpolateFull        end
-  if values.interpolateLua         ~= nil then be.interpolateLua         = values.interpolateLua         end
+  if values.interpolatePosition    ~= nil then stream.interpolatePosition    = values.interpolatePosition    end
+  if values.interpolateAlternative ~= nil then stream.interpolateAlternative = values.interpolateAlternative end
+  if values.interpolateFull        ~= nil then stream.interpolateFull        = values.interpolateFull        end
+  if values.interpolateLua         ~= nil then stream.interpolateLua         = values.interpolateLua         end
 
   refreshLanguages()
 end

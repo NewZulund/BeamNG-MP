@@ -63,7 +63,6 @@ local function updatePlayersList(playersString)
 end
 
 local function setPing(ping)
-  log("I", "UI", tostring(ping))
   if tonumber(ping) > -1 then
 	be:executeJS('setPing("'..ping..' ms")')
   end
@@ -119,10 +118,23 @@ local function chatSend(msg)
 end
 
 local ready = true
+local deletenext = false
 
 local function ready(src)
   print("UI / Game Has now loaded ("..src..")")
   -- Now start the TCP connection to the launcher to allow the sending and receiving of the vehicle / session data
+
+  if src == "FIRSTVEH" then
+	deletenext = true
+  end
+  if src == "MP-SESSION" and deletenext then
+    print("deleting first car")
+	core_vehicles.removeCurrent(); -- 0.20 Fix
+    commands.setFreeCamera() -- Fix camera
+
+	deletenext = false
+  end
+
   if src == "MP-SESSION" or src == "FIRSTVEH" then
 	if ready then
 	  ready = false

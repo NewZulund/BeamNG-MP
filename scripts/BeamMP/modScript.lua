@@ -16,8 +16,8 @@ registerCoreModule("GameNetwork")
 load("vehicleSupport")
 registerCoreModule("vehicleSupport")
 
---load("sessionControl")
---registerCoreModule("sessionControl")
+load("sessionControl")
+registerCoreModule("sessionControl")
 
 load("vehicleGE")
 registerCoreModule("vehicleGE")

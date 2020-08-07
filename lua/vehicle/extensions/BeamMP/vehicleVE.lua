@@ -9,12 +9,20 @@ local M = {}
 
 local function applyPartConfig(data)
 	local decodedData = jsonDecode(data) -- Decode received data
-	partmgmt.setConfig(decodedData)
+	tableMerge(v.config, decodedData)
+	obj:respawn(serialize(v.config))
+end
+
+local function updateGFX(dt)
+	if playerInfo.firstPlayerSeated then
+		obj:queueGameEngineLua("vehicleGE.setCurrentVehicle(\'"..obj:getID().."\')")
+		--print("current car: "..obj:getID())
+	end
 end
 
 obj:queueGameEngineLua("electricsGE.setReady(\'"..obj:getID().."\')")
 
-
-M.applyPartConfig = applyPartConfig
+M.applyPartConfig	= applyPartConfig
+M.updateGFX			= updateGFX
 
 return M

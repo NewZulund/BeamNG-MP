@@ -155,7 +155,7 @@ local function onUpdate(dt) --ONUPDATE OPEN
 	end
 
 	if sendGearNow == true or e.gearIndex ~= gearMem then
-		obj:queueGameEngineLua("electricsGE.sendGear(\'"..e.gearIndex.."\', \'"..obj:getID().."\')") -- Send it to GE lua
+		obj:queueGameEngineLua("electricsGE.sendGear(\'"..e.gear.."\', \'"..obj:getID().."\')") -- Send it to GE lua
 		sendGearNow = false
 	end
 	gearMem = e.gearIndex
@@ -164,7 +164,18 @@ end --ONUPDATE CLOSE
 
 
 local function applyGear(data)
-	if (data) then controller.mainController.shiftToGearIndex(tonumber(data)) end
+	if not (data) then return end
+	if data == "R" then
+		controller.mainController.shiftToGearIndex(-1)
+	elseif data == "N" then
+		controller.mainController.shiftToGearIndex(0)
+	elseif data == "P" then
+		controller.mainController.shiftToGearIndex(1)
+	elseif data == "D" then
+		controller.mainController.shiftToGearIndex(2)
+	else
+		controller.mainController.shiftToGearIndex(tonumber(data))
+	end
 end
 
 
@@ -239,11 +250,13 @@ local function applyElectrics(data)
 				electrics.update(0) -- Update electrics values
 			elseif k == "signal_right_input" then
 				electrics.toggle_right_signal()
-				--electrics.update(0) -- Update electrics values
+				electrics.update(0) -- Update electrics values
 			elseif k == "lights_state" then
 				electrics.setLightsState(v) -- Apply lights values
 			elseif k == "lightbar" then
 				electrics.set_lightbar_signal(v) -- Apply lightbar values
+			elseif k == "horn" then
+				electrics.horn(v) -- Apply horn values
 			elseif k == "engineRunning" then
 				if v == 1 then
 					powertrain.getDevice("mainEngine"):activateStarter()

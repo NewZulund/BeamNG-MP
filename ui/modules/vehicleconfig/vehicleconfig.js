@@ -253,6 +253,8 @@ function ($filter, logger, $scope, $window, bngApi, RateLimiter, VehicleConfig, 
       bngApi.activeObjectLua(`partmgmt.setPartsConfig(${bngApi.serializeToLua(newConfig)})`);
     });
     console.time('waitingForLua')
+
+	bngApi.activeObjectLua("obj:queueGameEngineLua(\"vehicleGE.sendCustomVehicleData('\"..obj:getID()..\"', '\"..jsonEncode(partmgmt.state.config)..\"')\")");
   };
 
   vm.reset = function () {

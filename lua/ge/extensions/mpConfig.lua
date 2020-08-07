@@ -18,6 +18,8 @@ local inputsTickrate = 0.02 --0.05
 local electricsDelay = 0
 local electricsTickrate = 0.02
 
+local pauseDisabled = false
+
 local function setNickname(x)
   print("Nickname Set To: "..x)
   Nickname = x
@@ -68,33 +70,43 @@ local function getElectricsTickrate()
   return electricsTickrate
 end
 
+local function setPauseDisabled(x)
+  pauseDisabled = x
+end
+
+local function getPauseDisabled()
+  return pauseDisabled
+end
+
 -- Variables
-M.ShowNameTags = ShowNameTags
-M.Nickname = Nickname
-M.PlayerServerID = PlayerServerID
-M.getPlayerServerID = getPlayerServerID
-M.setPlayerServerID = setPlayerServerID
+--M.ShowNameTags = ShowNameTags
+--M.Nickname = Nickname
+--M.PlayerServerID = PlayerServerID
 M.State = State
 M.nodesDelay = nodesDelay
-M.nodesTickrate = nodesTickrate
+--M.nodesTickrate = nodesTickrate
 M.positionDelay = positionDelay
-M.positionTickrate = positionTickrate
+--M.positionTickrate = positionTickrate
 M.inputsDelay = inputsDelay
-M.inputsTickrate = inputsTickrate
+--M.inputsTickrate = inputsTickrate
 M.electricsDelay = electricsDelay
-M.electricsTickrate = electricsTickrate
+--M.electricsTickrate = electricsTickrate
 
 -- Functions
-M.setNickname = setNickname
-M.getNickname = getNickname
-M.setNodesTickrate = setNodesTickrate
-M.getNodesTickrate = getNodesTickrate
-M.setPositionTickrate = setPositionTickrate
-M.getPositionTickrate = getPositionTickrate
-M.setInputsTickrate = setInputsTickrate
-M.getInputsTickrate = getInputsTickrate
-M.setElectricsTickrate = setElectricsTickrate
-M.getElectricsTickrate = getElectricsTickrate
+M.setNickname			= setNickname
+M.getNickname			= getNickname
+M.getPlayerServerID		= getPlayerServerID
+M.setPlayerServerID		= setPlayerServerID
+M.setNodesTickrate		= setNodesTickrate
+M.getNodesTickrate		= getNodesTickrate
+M.setPositionTickrate	= setPositionTickrate
+M.getPositionTickrate	= getPositionTickrate
+M.setInputsTickrate		= setInputsTickrate
+M.getInputsTickrate		= getInputsTickrate
+M.setElectricsTickrate	= setElectricsTickrate
+M.getElectricsTickrate	= getElectricsTickrate
+M.setPauseDisabled		= setPauseDisabled
+M.getPauseDisabled		= getPauseDisabled
 
 print("mpConfig Loaded.")
 return M

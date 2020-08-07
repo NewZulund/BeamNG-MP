@@ -2633,9 +2633,10 @@
 
     "ui.options.multiplayer": "Többjátékos",
 
-    "ui.options.multiplayer.nameTagTitle": "Játékosok neveinek mutatása",
+    "ui.options.multiplayer.nameTagTitle": "Játékosnevek",
     "ui.options.multiplayer.nameTags": "Játékosok neveinek mutatása",
     "ui.options.multiplayer.nameTagAlternate": "Alternatív névszínek",
+	"ui.options.multiplayer.nameTagShowDistance": "Játékosok távolságának mutatása",
 
     "ui.options.multiplayer.others": "Egyebek",
     "ui.options.multiplayer.debugOutput": "Fejlesztői üzenetek mutatása",

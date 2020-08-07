@@ -372,7 +372,7 @@ angular.module('beamng.stuff')
 				id = id.split(',')[1];
 				console.log(id);
 				server = JSON.parse(localStorage.getItem('favorites'))[id];
-				server.strippedName = server.strippedName.replace('UNKNOWN ', '');
+				//server.strippedName = server.strippedName.replace('UNKNOWN ', '');
 			}
 
 			highlightedServer = server;
@@ -467,7 +467,6 @@ angular.module('beamng.stuff')
 	};
 
 	function receiveServers(data) {
-		console.log(data)
 		var serverArray = new Array();
 
 		for (var i = 0; i < data.length; i++) {
@@ -482,10 +481,10 @@ angular.module('beamng.stuff')
 		serverArray.sort((a, b) => (b.official - a.official))
 
 		localStorage.setItem('servers', JSON.stringify(serverArray))
-
-		displayServers()
+		console.log(serverArray)
+		displayServers();
 	};
-	
+
 	function displayServers() {
 		var table = document.getElementById("serversTableBody");
 		table.innerHTML = "";
@@ -493,15 +492,15 @@ angular.module('beamng.stuff')
 		var allServers = JSON.parse(localStorage.getItem('servers'))
 		for(var i in allServers)
 			allServers[i].id = i;
-		
+
 		var favjson = JSON.parse(localStorage.getItem('favorites'))
 		if (favjson == null) return;
-		
+
 		var servers = new Array();
 
 
 		for(var i in favjson){
-			favjson[i].sname  = "UNKNOWN " + favjson[i].sname;
+			favjson[i].sname  = "❓ " + favjson[i].sname;
 			var foundServers = allServers.filter(s=>s.ip == favjson[i].ip).filter(s=>s.port == favjson[i].port)
 			if (foundServers.length>0) {
 				foundServers[0].favid = i;

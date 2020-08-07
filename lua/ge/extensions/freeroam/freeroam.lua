@@ -137,7 +137,7 @@ local function onVehicleSwitched(oldId, newId, player)
   if oldId then
     local veh = be:getObjectByID(oldId)
     if veh then
-      veh:queueLuaCommand('partmgmt.selectReset()')
+      extensions.core_vehicle_partmgmt.selectReset()
     end
   end
 end

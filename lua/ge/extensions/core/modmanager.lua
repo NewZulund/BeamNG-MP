@@ -303,9 +303,16 @@ local function updateZIPEntry(filename)
       d.orgZipFilename = d.orgZipFilename..'.zip'
       d.unpackedPath = filename
 
-      if #FS:findFilesByRootPattern( "/"..filename..'levels/', "*.mis", 1, true, false ) > 0 then d.modType = 'terrain' end
-      if #FS:findFilesByRootPattern( "/"..filename..'vehicles/', "*", 0, true, true ) > 0 then d.modType = 'vehicle' end
-    end
+      oldLvlFiles = FS:findFiles( "/"..filename..'levels/', "*.mis", 1, true, false )
+      lvlFiles = FS:findFiles( "/"..filename..'levels/', "*.level.json", 3, true, false )
+      vehFiles = FS:findFiles( "/"..filename..'vehicles/', "*", 0, true, true )
+      if #oldLvlFiles > 0 or #lvlFiles > 0 then d.modType = 'terrain' end
+      if #vehFiles > 0 then d.modType = 'vehicle' end
+      -- not sure if it's actually usefull do to the folowing as it happen only when mod is new
+      -- arrayConcat(filesInZIP, oldLvlFiles)
+      -- arrayConcat(filesInZIP, lvlFiles)
+      -- arrayConcat(filesInZIP, vehFiles)
+	end
 
     d.modname = modname
     mods[d.modname] = d
@@ -354,6 +361,17 @@ local function updateZIPEntry(filename)
     end
   end
   zip:close()
+
+  --if you only have vanila and unpacked, the level list do not get refreshed
+  if filename:find('/unpacked/') and filename:endswith('/') then
+    if FS:directoryExists(filename.."levels/") then
+      filesInZIP[#filesInZIP+1] = "/levels/" --dirty hack to refresh level list
+    end
+    if FS:directoryExists(filename.."vehicles/") then
+      filesInZIP[#filesInZIP+1] = "/vehicles/foo/bar.jbeam" --dirty hack to refresh veh list
+    end
+  end
+
   return mods[modname], filesInZIP
 end
 
@@ -640,7 +658,7 @@ local function test()
 end
 local function testZips()
   print('testZips')
-  local fileList = FS:findFilesByPattern( "/mods", "*.zip", -1, true, false )
+  local fileList = FS:findFiles( "/mods", "*.zip", -1, true, false )
   for k,v in pairs(fileList) do
     print( "ZIP file: " .. v )
 

@@ -100,6 +100,7 @@ end
 local function connectToServer(ip, port, modString)
 	if ip ~= undefined and port ~= undefined then
 		TCPSocket:send('C'..ip..':'..port)
+		Server.NAME = nil
 	else
 		TCPSocket:send('C'..Server.IP..':'..Server.PORT)
 		local mods = {}
@@ -131,7 +132,7 @@ local function LoadLevel(map)
 			print(v.levelName)
 	    if v.levelName:lower() == levelName then
 				print("Loading Multiplayer Map...")
-				freeroam_freeroam.startFreeroamByName(v.levelName, "default", true)
+				freeroam_freeroam.startFreeroamByName(v.levelName)
 				found = true
 				mapLoadingFailedCount = 0
 				break;
@@ -139,7 +140,7 @@ local function LoadLevel(map)
 	  end
 		-- we got this far?!?!?! Guess we dont have the level
 		if not found then
-			print("MAP NOT FOUND!!!!!... DID WE MISS SOMETHING??")
+			print("\nMAP NOT FOUND!!!!!... DID WE MISS SOMETHING??")
 			print("TRYING TO LOAD IT AGAIN!")
 			if mapLoadingFailedCount >= 3 then
 				print("FAILED TO LOAD THE MAP! DID IT GET LOADED INTO THE GAME??")
