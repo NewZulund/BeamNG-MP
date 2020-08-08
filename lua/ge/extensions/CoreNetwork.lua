@@ -128,7 +128,7 @@ local function LoadLevel(map)
 		print("Searching For Map...")
 		local levelName = string.gsub(map, '/info.json', '')
 		levelName = string.gsub(levelName, '/levels/', '')
-		for i, v in ipairs(core_levels.getList()) do
+		for i, v in ipairs(core_levels.getList(true)) do
 			print(v.levelName)
 	    if v.levelName:lower() == levelName then
 				print("Loading Multiplayer Map...")
@@ -140,7 +140,7 @@ local function LoadLevel(map)
 	  end
 		-- we got this far?!?!?! Guess we dont have the level
 		if not found then
-			print("\nMAP NOT FOUND!!!!!... DID WE MISS SOMETHING??")
+			print("MAP NOT FOUND!!!!!... DID WE MISS SOMETHING??")
 			print("TRYING TO LOAD IT AGAIN!")
 			if mapLoadingFailedCount >= 3 then
 				print("FAILED TO LOAD THE MAP! DID IT GET LOADED INTO THE GAME??")

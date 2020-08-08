@@ -9,17 +9,6 @@ local players = {}
 
 print("UI Initialising...")
 
-
--- setLanguage() -- language setting in case its not in the base game list
-local function setLanguage()
-  local lang = settings.getValue("userLanguageMP")
-  if lang ~= "" and lang ~= settings.getValue("userLanguage") then
-	print('setting language to: ' .. lang)
-	be:executeJS('setLanguage(\''..lang..'\');')
-  end
-end
-
-
 local function updateLoading(data)
   --print(data)
   local code = string.sub(data, 1, 1)
@@ -118,7 +107,7 @@ local function chatSend(msg)
 end
 
 local ready = true
-local deletenext = false
+local deletenext = true
 
 local function ready(src)
   print("UI / Game Has now loaded ("..src..")")
@@ -127,12 +116,16 @@ local function ready(src)
   if src == "FIRSTVEH" then
 	deletenext = true
   end
-  if src == "MP-SESSION" and deletenext then
-    print("deleting first car")
-	core_vehicles.removeCurrent(); -- 0.20 Fix
-    commands.setFreeCamera() -- Fix camera
+  if src == "MP-SESSION" then
+	print("deletenext: "..tostring(deletenext))
+    if deletenext then
+      print("[BeamMP] First Session Vehicle Removed, Maybe now request the vehicles in the game?")
+      core_vehicles.removeCurrent(); -- 0.20 Fix
+	  log("W", "ready", "DELETENEXT SET TO FALSE")
+      deletenext = false
+    end
 
-	deletenext = false
+    commands.setFreeCamera() -- Fix camera
   end
 
   if src == "MP-SESSION" or src == "FIRSTVEH" then
@@ -141,8 +134,8 @@ local function ready(src)
 	  GameNetwork.connectToLauncher()
 	end
 
-	if CoreNetwork.Server.NAME ~= nil then
-	  setStatus("Server : "..CoreNetwork.Server.NAME)
+	if CoreNetwork.Server ~= nil and CoreNetwork.Server.NAME ~= nil then
+	  setStatus("Server: "..CoreNetwork.Server.NAME)
 	end
   end
 end
@@ -151,6 +144,7 @@ local function readyReset()
   ready = true
 end
 
+M.deletenext = deletenext
 M.updateLoading = updateLoading
 M.updatePlayersList = updatePlayersList
 M.ready = ready

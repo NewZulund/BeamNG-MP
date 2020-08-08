@@ -98,6 +98,14 @@ local function modCheck(dt)
   setServerMods({})
 end
 
+local function printMapList(simple)
+	if simple ~= nil then
+		for _,v in pairs(core_levels.getSimpleList()) do print(v) end
+	else
+		for _,v in pairs(core_levels.getList(true)) do print(v.levelName) end
+	end
+end
+
 local function setServerMods(mods)
   --print("Server Mods Set:")
   dump(mods)
@@ -114,6 +122,8 @@ M.cleanUpSessionMods = cleanUpSessionMods
 M.showServerMods = showServerMods
 M.modCheck = modCheck
 M.setServerMods = setServerMods
+
+M.printMapList = printMapList
 
 print("mpmodmanager Loaded.")
 return M

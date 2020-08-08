@@ -237,6 +237,7 @@ end
 
 -- adds / updates a file in the DB
 local function updateZIPEntry(filename)
+  --log('I', 'updateZIPEntry', "filename : "..dumps(filename))
   local modname = getModNameFromPath(filename)
   local zip = ZipArchive()
   zip:openArchiveName( filename, "R" )

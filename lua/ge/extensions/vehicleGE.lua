@@ -27,8 +27,7 @@ local onVehicleSpawnedAllowed = true
 local onVehicleDestroyedAllowed = true
 local syncTimer = 0
 local syncVehIDs = {}
-local currentVehicle = nil
-local nextSpawnIsNotRemote = false
+local activeVehicle = nil
 -- ============= VARIABLES =============
 
 
@@ -65,6 +64,10 @@ end
 
 local function getOwnMap()
     return ownMap
+end
+
+local function getVehicleMap()
+    return vehiclesMap
 end
 --============== SOME FUNCTIONS ==============
 
@@ -158,12 +161,9 @@ local function sendCustomVehicleData(gameVehicleID, vehicleConfig)
 	syncVehIDs[gameVehicleID] = 0
 	print("clearing id "..gameVehicleID.." from the sync table")
 end
---=========================================== RECEIVE MODIFIED VEHICLE DATA =============================================
+--=========================================== SEND MODIFIED VEHICLE DATA =============================================
 
---=========================================== UPDATE SEND VEHICLE DATA =============================================
 local function UpdateVehicle(sid, data)
-	local currentVeh = be:getPlayerVehicle(0) -- Camera fix
-
 	local gameVehicleID = getGameVehicleID(sid)
 	local veh = be:getObjectByID(gameVehicleID)
 	local decodedData     = jsonDecode(data)
@@ -177,10 +177,7 @@ local function UpdateVehicle(sid, data)
 	else
 		print("RECEIVE MODIFIED DATA FOR A VEHICLE THAT IS NOT OF THE SAME TYPE!!!")
 	end
-
-	if currentVeh then be:enterVehicle(0, currentVeh) end -- Camera fix
 end
---=========================================== UPDATE SEND VEHICLE DATA =============================================
 
 
 local function onDisconnect()
@@ -188,7 +185,8 @@ local function onDisconnect()
 	ownMap = {}
 	vehiclesMap = {}
 	invertedVehiclesMap = {}
-	first = true
+	UI.deletenext = true
+	print("setting deletenext to true")
 end
 
 
@@ -205,7 +203,6 @@ local function onServerVehicleSpawned(playerRole, playerNickname, serverVehicleI
 	local cP0             = jsonDecode(decodedData[6]) -- Vehicle colorPalette0
 	local cP1             = jsonDecode(decodedData[7]) -- Vehicle colorPalette1
 
-
 	print("onServerVehicleSpawned ID's:  "..mpConfig.getPlayerServerID().." == "..playerServerID)
 	if mpConfig.getPlayerServerID() == playerServerID then -- If player ID = received player ID seems it's his own vehicle then sync it
 		insertVehicleMap(gameVehicleID, serverVehicleID) -- Insert new vehicle ID in map
@@ -219,31 +216,31 @@ local function onServerVehicleSpawned(playerRole, playerNickname, serverVehicleI
 		local pos = vec3(jsonDecode(decodedData[9]))
 		local rot = quat(jsonDecode(decodedData[10]))
 		local spawnedVeh = spawn.spawnVehicle(vehicleName, serialize(vehicleConfig), pos, rot, ColorF(c[1],c[2],c[3],c[4]), ColorF(cP0[1],cP0[2],cP0[3],cP0[4]), ColorF(cP1[1],cP1[2],cP1[3],cP1[4]), "multiplayerVeh", true)
-		--insertVehicleMap(spawnedVeh:getID(), serverVehicleID) -- Insert new vehicle ID in map
-		--dump(vehiclesMap[spawnedVeh:getID()])
+		print("New Vehicles ID : "..spawnedVeh:getID())
+		insertVehicleMap(spawnedVeh:getID(), serverVehicleID) -- Insert new vehicle ID in map
+		dump(vehiclesMap[spawnedVeh:getID()])
 		nicknameMap[tostring(spawnedVeh:getID())] = {}
 		nicknameMap[tostring(spawnedVeh:getID())].nickname = playerNickname
 		nicknameMap[tostring(spawnedVeh:getID())].role = playerRole
-		insertVehicleMap(spawnedVeh:getID(), serverVehicleID) -- Insert new vehicle ID in map
 	end
 
 	if currentVeh then be:enterVehicle(0, currentVeh) end -- Camera fix
 end
 --================================= ON VEHICLE SPAWNED (SERVER) ===================================
 
+
+
 --================================= ON VEHICLE SPAWNED (CLIENT) ===================================
 local function onVehicleSpawned(gameVehicleID)
 	local veh = be:getObjectByID(gameVehicleID)
-	print(veh.isMP)
-	print(ownMap[tostring(gameVehicleID)])
-	print(vehiclesMap[tostring(gameVehicleID)])
-	if ownMap[tostring(gameVehicleID)] ~= 1 and vehiclesMap[tostring(gameVehicleID)] == nil then		print("[BeamMP] Vehicle Spawned: "..gameVehicleID)
+	if ownMap[tostring(gameVehicleID)] ~= 1 and vehiclesMap[tostring(gameVehicleID)] == nil then
+		print("[BeamMP] Vehicle Spawned: "..gameVehicleID)
 		local veh = be:getObjectByID(gameVehicleID)
-		if first then
+		if first then  -- if first then
 			first = false
 			--commands.setFreeCamera() -- Fix camera
-			--veh:delete() -- Remove it
-			print("[BeamMP] First Session Vehicle Removed, Maybe now request the vehicles in the game?")
+			--veh:delete() -- Remove it  -- Temp Removed for 0.20 FIx
+			--print("[BeamMP] First Session Vehicle Removed, Maybe now request the vehicles in the game?")
 			--if commands.isFreeCamera(player) then commands.setGameCamera() end -- Fix camera
 			UI.ready("FIRSTVEH") -- Solve session setup without UI sending ready status
 			--onMPSessionInit()
@@ -251,7 +248,7 @@ local function onVehicleSpawned(gameVehicleID)
 			veh:queueLuaCommand("extensions.addModulePath('lua/vehicle/extensions/BeamMP')") -- Load lua files
 			veh:queueLuaCommand("extensions.loadModulesInDirectory('lua/vehicle/extensions/BeamMP')")
 			--if Network.getStatus() > 0 and not getServerVehicleID(gameVehicleID) then -- If is connecting or connected
-			if GameNetwork.connectionStatus() == 1 and not getServerVehicleID(gameVehicleID) then -- If TCP connected
+			if GameNetwork.connectionStatus() == 1 and not getServerVehicleID(gameVehicleID) and veh.isMP ~= "1"  then -- If TCP connected
 				sendVehicle(gameVehicleID) -- Send it to the server
 				if isOwn(gameVehicleID) then
 					veh:queueLuaCommand("powertrainVE.sendAllPowertrain()")
@@ -379,7 +376,7 @@ end
 
 local function handle(rawData)
 	-- the data will be the first opt then the data followed
-	--print('vehicleGE:'..rawData)
+	print('vehicleGE:'..rawData)
 	local code = string.sub(rawData, 1, 1)
 	local rawData = string.sub(rawData, 3)
 	if code == "s" then
@@ -445,18 +442,6 @@ local function setCurrentVehicle(gameVehicleID)
 	activeVehicle = gameVehicleID
 end
 
-
-function setTires(shouldHaveTires)
-	for i = 0, be:getObjectCount() do
-		local veh = be:getObject(i)
-		if veh then
-			local gameVehicleID = veh:getID()
-			if not isOwn(gameVehicleID) then
-				veh:queueLuaCommand("vehicleVE.setTires("..tostring(shouldHaveTires)..")")
-			end
-		end
-	end
-end
 
 local function onUpdate(dt)
 	if GameNetwork.connectionStatus() == 1 then -- If TCP connected
@@ -575,15 +560,11 @@ local function onUpdate(dt)
 						forecolor, true, false, -- Foreground Color / Background / Wtf
 						backcolor -- Background Color
 					)
-					
-					
-					
-					
 				end
 
 
 				if syncVehIDs[gameVehicleID] ~= nil and syncVehIDs[gameVehicleID] ~= 0 then
-				
+
 					print("veh id "..gameVehicleID.." has value "..syncVehIDs[gameVehicleID].." in the sync table")
 
 					syncTimer = syncTimer+dt
@@ -602,7 +583,6 @@ local function onUpdate(dt)
 	end
 end
 
-M.setTires				  = setTires
 M.setCurrentVehicle		  = setCurrentVehicle
 M.removeRequest			  = removeRequest
 M.onUpdate                = onUpdate
@@ -611,6 +591,7 @@ M.onVehicleSwitched       = onVehicleSwitched
 M.onDisconnect            = onDisconnect
 M.isOwn                   = isOwn
 M.getOwnMap               = getOwnMap
+M.getVehicleMap           = getVehicleMap
 M.getGameVehicleID        = getGameVehicleID
 M.getServerVehicleID      = getServerVehicleID
 M.onVehicleDestroyed      = onVehicleDestroyed
